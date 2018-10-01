@@ -1,4 +1,4 @@
-package com.capitalone.dashboard.client.api;
+package com.capitalone.dashboard.client.testexecution;
 
 import com.atlassian.util.concurrent.Promise;
 import com.capitalone.dashboard.client.api.domain.TestExecution;

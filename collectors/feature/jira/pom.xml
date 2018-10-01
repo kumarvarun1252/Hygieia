@@ -117,9 +117,9 @@
 
   <dependencies>
     <dependency>
-      <groupId>com.atlassian.jira</groupId>
-      <artifactId>jira-rest-java-client-core</artifactId>
-      <version>3.0.0</version>
+      <groupId>org.openengsb.wrapped</groupId>
+      <artifactId>com.atlassian.jira.rest.client</artifactId>
+      <version>2.0.0-m31.w2</version>
     </dependency>
     <dependency>
       <groupId>com.capitalone.dashboard</groupId>
