@@ -11,9 +11,6 @@ import org.codehaus.jettison.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Collection;
 
-/**
- * Created by lucho on 25/08/16.
- */
 public class TestStepUpdateJsonGenerator extends TestStepJsonGenerator {
     public final static String KEY_ADDS="add";
     public final static String KEY_REMOVES="remove";

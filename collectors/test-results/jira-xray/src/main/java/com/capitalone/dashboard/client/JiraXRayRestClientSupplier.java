@@ -1,7 +1,9 @@
 package com.capitalone.dashboard.client;
 
 import com.atlassian.jira.rest.client.api.JiraRestClient;
+import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClient;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
+import com.atlassian.jira.rest.client.internal.async.DisposableHttpClient;
 import com.capitalone.dashboard.util.TestResultSettings;
 import com.capitalone.dashboard.util.Supplier;
 import org.apache.commons.codec.binary.Base64;
@@ -23,47 +25,56 @@ import java.util.StringTokenizer;
  * @author <a href="mailto:MarkRx@users.noreply.github.com">MarkRx</a>
  */
 @Component
-public class JiraXRayRestClientSupplier implements Supplier<JiraRestClient> {
+public class JiraXRayRestClientSupplier implements Supplier<AsynchronousJiraRestClient> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(JiraXRayRestClientSupplier.class);
 	
 	@Autowired
 	private TestResultSettings testResultSettings;
 	
 	@Override
-	public JiraRestClient get() {
-		JiraRestClient client = null;
+	public AsynchronousJiraRestClient get() {
+		AsynchronousJiraRestClient client = null;
 		
-		String jiraCredentials = testResultSettings.getJiraCredentials();
-		String jiraBaseUrl = testResultSettings.getJiraBaseUrl();
-		String proxyUri = null;
-		String proxyPort = null;
+//		String jiraCredentials = testResultSettings.getJiraCredentials();
+//		String jiraBaseUrl = testResultSettings.getJiraBaseUrl();
+
+		String jiraCredentials = "RU1CMjM1OlNlY3JldDUy";
+		String jiraBaseUrl = "https://jira.kdc.capitalone.com/";
+		String proxyUri = "http://proxy.kdc.capitalone.com";
+		String proxyPort = "8099";
+		DisposableHttpClient httpClient = null;
 		
 		URI jiraUri = null;
 		
-		try {
-			if (testResultSettings.getJiraProxyUrl() != null && !testResultSettings.getJiraProxyUrl().isEmpty() && (testResultSettings.getJiraProxyPort() != null)) {
-				proxyUri = this.testResultSettings.getJiraProxyUrl();
-				proxyPort = this.testResultSettings.getJiraProxyPort();
-				
-				jiraUri = this.createJiraConnection(jiraBaseUrl,
-						proxyUri + ":" + proxyPort, 
-						this.decodeCredentials(jiraCredentials).get("username"),
-						this.decodeCredentials(jiraCredentials).get("password"));
-			} else {
-				jiraUri = new URI(jiraBaseUrl);
-			}
+//		try {
+//			if (testResultSettings.getJiraProxyUrl() != null && !testResultSettings.getJiraProxyUrl().isEmpty() && (testResultSettings.getJiraProxyPort() != null)) {
+//				proxyUri = this.testResultSettings.getJiraProxyUrl();
+//				proxyPort = this.testResultSettings.getJiraProxyPort();
+//
+//				jiraUri = this.createJiraConnection(jiraBaseUrl,
+//						proxyUri + ":" + proxyPort,
+//						this.decodeCredentials(jiraCredentials).get("username"),
+//						this.decodeCredentials(jiraCredentials).get("password"));
+//			} else {
+// 				jiraUri = new URI(jiraBaseUrl);
+//			}
 			
-			InetAddress.getByName(jiraUri.getHost());
-			client = new AsynchronousJiraRestClientFactory()
-					.createWithBasicHttpAuthentication(jiraUri, 
-							decodeCredentials(jiraCredentials).get("username"),
-							decodeCredentials(jiraCredentials).get("password"));
+//			InetAddress.getByName(jiraUri.getHost());
+		jiraUri = this.createJiraConnection(jiraBaseUrl,
+				proxyUri + ":" + proxyPort,
+				this.decodeCredentials(jiraCredentials).get("username"),
+				this.decodeCredentials(jiraCredentials).get("password"));
+
+		client = new JiraXrayRestClientFactory()
+				.createWithBasicHttpAuthentication(jiraUri,
+						decodeCredentials(jiraCredentials).get("username"),
+						decodeCredentials(jiraCredentials).get("password"));
 			
-		} catch (UnknownHostException | URISyntaxException e) {
-			LOGGER.error("The Jira host name is invalid. Further jira collection cannot proceed.");
-			
-			LOGGER.debug("Exception", e);
-		}
+//		} catch ( URISyntaxException e) {
+//			LOGGER.error("The Jira host name is invalid. Further jira collection cannot proceed.");
+//
+//			LOGGER.debug("Exception", e);
+//		}
 		
 		return client;
 	}

@@ -10,9 +10,6 @@ import org.codehaus.jettison.json.JSONObject;
 
 import java.net.URI;
 
-/**
- * Created by lucho on 22/08/16.
- */
 public class TestStepJsonParser implements JsonObjectParser<TestStep> {
 
     private static final RendereableItemJsonParser rendereableJsonParser=new RendereableItemJsonParser();

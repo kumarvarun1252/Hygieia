@@ -12,9 +12,6 @@ import java.net.URI;
 import java.text.ParseException;
 import java.util.Date;
 
-/**
- * Created by lucho on 12/08/16.
- */
 public class TestRunJsonParser implements JsonObjectParser<TestRun> {
     private final static DefectJsonParser defectParser=new DefectJsonParser();
     private final static EvidenceJsonParser evidenceParser=new EvidenceJsonParser();

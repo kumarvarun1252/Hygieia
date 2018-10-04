@@ -12,10 +12,6 @@ import org.codehaus.jettison.json.JSONObject;
 
 import java.util.ArrayList;
 
-/**
- * Created by lucho on 22/08/16.
- */
-
 public class TestRunJsonGenerator implements JsonGenerator<TestRun> {
     public final static String KEY_ID="id";
     public final static String KEY_EXECBY="executedBy";

@@ -8,9 +8,6 @@ import org.codehaus.jettison.json.JSONObject;
 
 import java.net.URI;
 
-/**
- * Created by lucho on 25/08/16.
- */
 public class TestJsonParser implements JsonObjectParser<TestExecution.Test> {
 
         public TestExecution.Test parse(JSONObject json) throws JSONException {

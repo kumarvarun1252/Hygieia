@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * Created by lucho on 25/08/16.
  * Generate JSON object payload for the server rest implementation.
  */
 public class TestExecUpdateJsonGenerator implements JsonGenerator<TestExecution> {

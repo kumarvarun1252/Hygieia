@@ -1,6 +1,6 @@
 package com.capitalone.dashboard.client.api.domain;
 
-import com.capitalone.dashboard.util.RendereableItem;
+import com.capitalone.dashboard.client.core.util.RendereableItem;
 
 public class Comment implements RendereableItem {
     private String raw;

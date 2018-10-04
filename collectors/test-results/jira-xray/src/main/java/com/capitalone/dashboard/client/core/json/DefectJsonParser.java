@@ -6,9 +6,6 @@ import com.capitalone.dashboard.client.api.domain.Defect;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
-/**
- * Created by lucho on 16/08/16.
- */
 public class DefectJsonParser implements JsonObjectParser<Defect> {
     public static final String DEFECT_KEY_ID="id";
     public static final String DEFECT_KEY="key";

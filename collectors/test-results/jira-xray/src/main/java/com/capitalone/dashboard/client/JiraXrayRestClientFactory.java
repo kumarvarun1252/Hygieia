@@ -5,28 +5,26 @@ import com.atlassian.jira.rest.client.api.AuthenticationHandler;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.atlassian.jira.rest.client.auth.BasicHttpAuthenticationHandler;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousHttpClientFactory;
+import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClient;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
 import com.atlassian.jira.rest.client.internal.async.DisposableHttpClient;
 
 import java.net.URI;
 
-/**
- * Created by lucho on 16/08/16.
- */
 public class JiraXrayRestClientFactory extends AsynchronousJiraRestClientFactory {
 
 
-    public JiraRestClient create(URI serverUri, AuthenticationHandler authenticationHandler) {
+    public AsynchronousJiraRestClient create(URI serverUri, AuthenticationHandler authenticationHandler) {
         DisposableHttpClient httpClient = (new AsynchronousHttpClientFactory()).createClient(serverUri, authenticationHandler);
 
         return new JiraXRayRestClientImpl(serverUri, httpClient);
     }
 
-    public JiraRestClient createWithBasicHttpAuthentication(URI serverUri, String username, String password) {
+    public AsynchronousJiraRestClient createWithBasicHttpAuthentication(URI serverUri, String username, String password) {
         return this.create(serverUri, (AuthenticationHandler)(new BasicHttpAuthenticationHandler(username, password)));
     }
 
-    public JiraRestClient create(URI serverUri, HttpClient httpClient) {
+    public AsynchronousJiraRestClient create(URI serverUri, HttpClient httpClient) {
         DisposableHttpClient disposableHttpClient = (new AsynchronousHttpClientFactory()).createClient(httpClient);
         return new JiraXRayRestClientImpl(serverUri, disposableHttpClient);
     }

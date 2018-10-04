@@ -1,8 +1,5 @@
-package com.capitalone.dashboard.util;
+package com.capitalone.dashboard.client.core.util;
 
-/**
- * Created by lucho on 22/08/16.
- */
 public interface RendereableItem {
 
     public String getRendered();

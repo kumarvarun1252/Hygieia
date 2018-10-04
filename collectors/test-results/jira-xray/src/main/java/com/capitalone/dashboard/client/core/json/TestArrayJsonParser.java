@@ -7,9 +7,6 @@ import org.codehaus.jettison.json.JSONException;
 
 import java.util.ArrayList;
 
-/**
- * Created by lucho on 26/08/16.
- */
 public class TestArrayJsonParser implements JsonArrayParser<Iterable<TestExecution.Test>> {
     private final static TestJsonParser tParser=new TestJsonParser();
 

@@ -9,9 +9,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Date;
 
-/**
- * Created by lucho on 18/08/16.
- */
 public class EvidenceJsonParser implements JsonObjectParser<Evidence> {
     public static final String KEY_ID="id";
     public static final String KEY_FILENAME="fileName";

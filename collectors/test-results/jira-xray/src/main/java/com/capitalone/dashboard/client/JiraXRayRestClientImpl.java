@@ -11,9 +11,6 @@ import com.capitalone.dashboard.client.testset.TestSetRestClient;
 
 import java.net.URI;
 
-/**
- * Created by lucho on 11/08/16.
- */
 public class JiraXRayRestClientImpl extends AsynchronousJiraRestClient implements JiraXRayRestClient {
     private TestRestClient testClient=null;
     private TestExecutionRestClient testExecutionClient=null;

@@ -19,9 +19,6 @@ package com.capitalone.dashboard.util;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-/**
- * Bean to hold settings specific to the Feature collector.
- */
 @Component
 @ConfigurationProperties(prefix = "feature")
 public class TestResultSettings {

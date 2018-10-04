@@ -5,9 +5,6 @@ import com.capitalone.dashboard.client.api.domain.Defect;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
-/**
- * Created by lucho on 23/08/16.
- */
 public class DefectJSONGenerator implements JsonGenerator<Defect> {
 
     public static final String KEY_ID="id";

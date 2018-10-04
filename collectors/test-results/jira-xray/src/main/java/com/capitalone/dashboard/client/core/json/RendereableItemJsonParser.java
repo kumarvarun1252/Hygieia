@@ -1,14 +1,11 @@
 package com.capitalone.dashboard.client.core.json;
 
 import com.atlassian.jira.rest.client.internal.json.JsonObjectParser;
-import com.capitalone.dashboard.util.RendereableItem;
-import com.capitalone.dashboard.util.RendereableItemImpl;
+import com.capitalone.dashboard.client.core.util.RendereableItem;
+import com.capitalone.dashboard.client.core.util.RendereableItemImpl;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
-/**
- * Created by lucho on 22/08/16.
- */
 public class RendereableItemJsonParser implements JsonObjectParser<RendereableItem> {
     private static final String KEY_RAW="raw";
     private static final String KEY_RENDERED="rendered";

@@ -11,9 +11,6 @@ import org.codehaus.jettison.json.JSONObject;
 
 import java.util.ArrayList;
 
-/**
- * Created by lucho on 22/08/16.
- */
 public class TestStepJsonGenerator  implements JsonGenerator<TestStep> {
 
     private final static RendereableItemJsonGenerator rendereableGenerator=new RendereableItemJsonGenerator();

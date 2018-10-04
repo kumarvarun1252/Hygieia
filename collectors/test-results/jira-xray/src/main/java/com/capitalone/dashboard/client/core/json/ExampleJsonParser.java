@@ -10,9 +10,6 @@ import org.codehaus.jettison.json.JSONObject;
 import java.net.URI;
 import java.util.ArrayList;
 
-/**
- * Created by lucho on 22/08/16.
- */
 public class ExampleJsonParser implements JsonObjectParser<Example> {
     private final static String KEY_ID="id";
     private final static String KEY_RANK="rank";

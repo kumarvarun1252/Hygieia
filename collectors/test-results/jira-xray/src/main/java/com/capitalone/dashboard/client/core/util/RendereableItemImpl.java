@@ -1,8 +1,5 @@
-package com.capitalone.dashboard.util;
+package com.capitalone.dashboard.client.core.util;
 
-/**
- * Created by lucho on 22/08/16.
- */
 public class RendereableItemImpl implements RendereableItem {
 
     private String raw;

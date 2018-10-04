@@ -10,9 +10,6 @@ import org.codehaus.jettison.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Collection;
 
-/**
- * Created by lucho on 23/08/16.
- */
 public class TestRunUpdateJsonGenerator extends TestRunJsonGenerator {
     private static final String KEY_ADD="add";
     private static final String KEY_REMOVE="remove";

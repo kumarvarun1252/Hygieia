@@ -1,8 +1,8 @@
 package com.capitalone.dashboard.client.api.domain;
 
 import com.atlassian.jira.rest.client.api.domain.BasicIssue;
-import com.capitalone.dashboard.util.RendereableItem;
-import com.capitalone.dashboard.util.RendereableItemImpl;
+import com.capitalone.dashboard.client.core.util.RendereableItem;
+import com.capitalone.dashboard.client.core.util.RendereableItemImpl;
 
 import java.net.URI;
 import java.util.ArrayList;

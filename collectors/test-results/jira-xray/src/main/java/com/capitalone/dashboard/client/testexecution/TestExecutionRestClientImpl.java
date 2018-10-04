@@ -22,9 +22,6 @@ import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
 import java.util.ArrayList;
 
-/**
- * Created by lucho on 25/08/16.
- */
 public class TestExecutionRestClientImpl extends AbstractAsynchronousRestClient implements TestExecutionRestClient {
     private URI baseUri;
     private final  TestArrayJsonParser testsParser=new TestArrayJsonParser();

@@ -1,13 +1,10 @@
 package com.capitalone.dashboard.client.core.json.gen;
 
 import com.atlassian.jira.rest.client.internal.json.gen.JsonGenerator;
-import com.capitalone.dashboard.util.RendereableItem;
+import com.capitalone.dashboard.client.core.util.RendereableItem;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
-/**
- * Created by lucho on 23/08/16.
- */
 public class RendereableItemJsonGenerator  implements JsonGenerator<RendereableItem> {
 
     private final static String KEY_RAW="raw";
