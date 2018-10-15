@@ -14,21 +14,18 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 /**
  * Collects {@link TestResultCollector} data from feature content source system.
- * 
- * @author KFK884
  */
-@Component
+
 public class TestResultCollectorTask extends CollectorTask<TestResultCollector> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(TestResultCollectorTask.class);
 	
 	private final CoreFeatureSettings coreFeatureSettings;
-	private final FeatureRepository featureRepository;
-	private final TeamRepository teamRepository;
-	private final ScopeRepository projectRepository;
-	private final TestResultRepository testResultCollectorRepository;
+	private final TestResultRepository testResultRepository;
+	private final TestResultCollectorRepository testResultCollectorRepository;
 	private final TestResultSettings testResultSettings;
 	private final JiraXRayRestClient jiraXRayRestClient;
 
@@ -39,23 +36,18 @@ public class TestResultCollectorTask extends CollectorTask<TestResultCollector> 
 	 * 
 	 * @param taskScheduler
 	 *            A task scheduler artifact
-	 * @param teamRepository
-	 *            The repository being use for feature collection
 	 * @param testResultSettings
 	 *            The settings being used for feature collection from the source
 	 *            system
 	 */
 	@Autowired
 	public TestResultCollectorTask(CoreFeatureSettings coreFeatureSettings,
-								   TaskScheduler taskScheduler, FeatureRepository featureRepository,
-								   TeamRepository teamRepository, ScopeRepository projectRepository,
-								   TestResultRepository testResultCollectorRepository, TestResultSettings testResultSettings,
+								   TaskScheduler taskScheduler, TestResultRepository testResultRepository,
+								   TestResultCollectorRepository testResultCollectorRepository, TestResultSettings testResultSettings,
 								   JiraXRayRestClient jiraXRayRestClient) {
 		super(taskScheduler, FeatureCollectorConstants.JIRA);
+		this.testResultRepository = testResultRepository;
 		this.testResultCollectorRepository = testResultCollectorRepository;
-		this.teamRepository = teamRepository;
-		this.projectRepository = projectRepository;
-		this.featureRepository = featureRepository;
 		this.coreFeatureSettings = coreFeatureSettings;
 		this.testResultSettings = testResultSettings;
 		this.jiraXRayRestClient = jiraXRayRestClient;

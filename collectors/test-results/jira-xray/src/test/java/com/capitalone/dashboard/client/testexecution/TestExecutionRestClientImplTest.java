@@ -37,6 +37,7 @@ public class TestExecutionRestClientImplTest {
     @Test
     public void testGetTests() throws Exception {
         Iterable<TestExecution.Test>tests= restClient.getTestExecutionClient().getTests(testExecution).claim();
+        restClient.getTestExecutionClient().setTests(testExecution);
 
         for(TestExecution.Test t:tests)
         {

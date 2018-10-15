@@ -11,6 +11,7 @@ public enum CollectorType {
     Artifact,
     Deployment,
     AgileTool,
+    TestResult,
     @Deprecated
     Feature,
     @Deprecated

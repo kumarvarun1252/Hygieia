@@ -5,6 +5,6 @@ import com.capitalone.dashboard.model.TestResultCollector;
 /**
  * Repository for {@link TestResultCollector}.
  */
-public interface TestResultRepository extends
+public interface TestResultCollectorRepository extends
 		BaseCollectorRepository<TestResultCollector> {
 }
