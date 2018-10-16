@@ -147,19 +147,27 @@ public class TestExecutionRestClientImpl extends AbstractAsynchronousRestClient 
             TestExecution testExecution = new TestExecution(new URI(""), "EME-1946", 1977L);
             LOGGER.info("\n TEST EXECUTION: " + testExecution);
 
-            if (this.getTests(testExecution).isDone()) {
-                Iterable<TestExecution.Test> tests = this.getTests(testExecution).claim();
+            Iterable<TestExecution.Test> tests = this.getTests(testExecution).claim();
 
-                while (tests.iterator().hasNext()) {
-                    LOGGER.info("\n TESTS: " + tests.toString());
+            LOGGER.info("\n TESTS: " + tests.toString());
 
-                    tests.forEach(test -> {
-                        LOGGER.info("\n TEST ID: " + test.getId() + " TEST SELF" + test.getSelf() + " TEST KEY" + test.getKey());
-                    });
-            }
+            tests.forEach(test -> {
+                LOGGER.info("\n TEST ID: " + test.getId() + " TEST SELF" + test.getSelf() + " TEST KEY" + test.getKey());
+            });
+
+//            if (this.getTests(testExecution).isDone()) {
+//                Iterable<TestExecution.Test> tests = this.getTests(testExecution).claim();
+//
+//                while (tests.iterator().hasNext()) {
+//                    LOGGER.info("\n TESTS: " + tests.toString());
+//
+//                    tests.forEach(test -> {
+//                        LOGGER.info("\n TEST ID: " + test.getId() + " TEST SELF" + test.getSelf() + " TEST KEY" + test.getKey());
+//                    });
+//            }
 
 
-            }
+//            }
 //            LOGGER.info("\n TESTS: " + tests.toString());
 //
 //            for(TestExecution.Test t:tests)
