@@ -49,6 +49,7 @@ public class TestExecutionRestClientImpl extends AbstractAsynchronousRestClient 
     private final  TestArrayJsonParser testsParser=new TestArrayJsonParser();
     private final static TestExecUpdateJsonGenerator execUpdateGenerator=new TestExecUpdateJsonGenerator();
     private final TestResultSettings testResultSettings = new TestResultSettings();
+    private final TestResultCollectorRepository testResultCollectorRepository;
 
 
     private SearchRestClient searchRestClient=null;
@@ -60,13 +61,13 @@ public class TestExecutionRestClientImpl extends AbstractAsynchronousRestClient 
 //    private final TestResultRepository testResultRepository;
 //    private final JiraXRayRestClient jiraXRayRestClient;
 
-    public TestExecutionRestClientImpl(URI serverUri, DisposableHttpClient httpClient){
+    public TestExecutionRestClientImpl(URI serverUri, DisposableHttpClient httpClient, TestResultCollectorRepository testResultCollectorRepository){
         super(httpClient);
         baseUri = UriBuilder.fromUri(serverUri).path("/rest/raven/{restVersion}/api/").build(PluginConstants.XRAY_REST_VERSION);
         searchRestClient=new AsynchronousSearchRestClient(UriBuilder.fromUri(serverUri).path("rest/api/latest/").build(new Object[0]),httpClient);
 
 //        this.testResultSettings = testResultSettings;
-//        this.testResultCollectorRepository = testResultCollectorRepository;
+        this.testResultCollectorRepository = testResultCollectorRepository;
 //        this.testResultRepository = testResultRepository;
 //        this.jiraXRayRestClient = jiraXRayRestClient;
     }
@@ -137,7 +138,8 @@ public class TestExecutionRestClientImpl extends AbstractAsynchronousRestClient 
     @SuppressWarnings({ "PMD.AvoidDeeplyNestedIfStmts", "PMD.NPathComplexity" })
     private void updateMongoInfo(List<Issue> currentPagedJiraRs) {
         final TestResultSettings testResultSettings = new TestResultSettings();
-        final TestResultCollectorRepository testResultCollectorRepository;
+
+        ObjectId jiraFeatureId = testResultCollectorRepository.findByName(FeatureCollectorConstants.JIRA_XRAY).getId();
 
         LOGGER.info("\n IN updateMongoInfo Method");
 

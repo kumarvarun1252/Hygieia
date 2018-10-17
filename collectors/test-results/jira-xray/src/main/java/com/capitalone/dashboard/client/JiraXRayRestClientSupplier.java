@@ -4,6 +4,7 @@ import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClient;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
 import com.atlassian.jira.rest.client.internal.async.DisposableHttpClient;
+import com.capitalone.dashboard.repository.TestResultCollectorRepository;
 import com.capitalone.dashboard.util.TestResultSettings;
 import com.capitalone.dashboard.util.Supplier;
 import org.apache.commons.codec.binary.Base64;
@@ -30,6 +31,7 @@ public class JiraXRayRestClientSupplier implements Supplier<AsynchronousJiraRest
 	
 	@Autowired
 	private TestResultSettings testResultSettings;
+	private TestResultCollectorRepository testResultCollectorRepository;
 	
 	@Override
 	public AsynchronousJiraRestClient get() {
@@ -68,7 +70,7 @@ public class JiraXRayRestClientSupplier implements Supplier<AsynchronousJiraRest
 		client = new JiraXrayRestClientFactory()
 				.createWithBasicHttpAuthentication(jiraUri,
 						decodeCredentials(jiraCredentials).get("username"),
-						decodeCredentials(jiraCredentials).get("password"));
+						decodeCredentials(jiraCredentials).get("password"), testResultCollectorRepository);
 			
 //		} catch ( URISyntaxException e) {
 //			LOGGER.error("The Jira host name is invalid. Further jira collection cannot proceed.");
