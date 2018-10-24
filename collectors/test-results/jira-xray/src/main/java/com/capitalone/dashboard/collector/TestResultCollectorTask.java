@@ -1,9 +1,8 @@
 package com.capitalone.dashboard.collector;
 
+import com.atlassian.jira.rest.client.internal.async.DisposableHttpClient;
 import com.capitalone.dashboard.client.JiraXRayRestClient;
-//import com.capitalone.dashboard.client.project.ProjectDataClientImpl;
-//import com.capitalone.dashboard.client.story.StoryDataClientImpl;
-//import com.capitalone.dashboard.client.team.TeamDataClientImpl;
+import com.capitalone.dashboard.client.testexecution.TestExecutionRestClientImpl;
 import com.capitalone.dashboard.model.TestResultCollector;
 import com.capitalone.dashboard.repository.*;
 import com.capitalone.dashboard.util.CoreFeatureSettings;
@@ -13,8 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.TaskScheduler;
-import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
+
+import java.net.URI;
 
 /**
  * Collects {@link TestResultCollector} data from feature content source system.
@@ -25,9 +24,11 @@ public class TestResultCollectorTask extends CollectorTask<TestResultCollector> 
 	
 	private final CoreFeatureSettings coreFeatureSettings;
 	private final TestResultRepository testResultRepository;
+	private final FeatureRepository featureRepository;
 	private final TestResultCollectorRepository testResultCollectorRepository;
 	private final TestResultSettings testResultSettings;
 	private final JiraXRayRestClient jiraXRayRestClient;
+	private final DisposableHttpClient httpClient;
 
 	/**
 	 * Default constructor for the collector task. This will construct this
@@ -41,16 +42,17 @@ public class TestResultCollectorTask extends CollectorTask<TestResultCollector> 
 	 *            system
 	 */
 	@Autowired
-	public TestResultCollectorTask(CoreFeatureSettings coreFeatureSettings,
-								   TaskScheduler taskScheduler, TestResultRepository testResultRepository,
+	public TestResultCollectorTask(CoreFeatureSettings coreFeatureSettings, DisposableHttpClient httpClient, TaskScheduler taskScheduler, TestResultRepository testResultRepository,
 								   TestResultCollectorRepository testResultCollectorRepository, TestResultSettings testResultSettings,
-								   JiraXRayRestClient jiraXRayRestClient) {
+								   JiraXRayRestClient jiraXRayRestClient, FeatureRepository featureRepository) {
 		super(taskScheduler, FeatureCollectorConstants.JIRA);
 		this.testResultRepository = testResultRepository;
 		this.testResultCollectorRepository = testResultCollectorRepository;
 		this.coreFeatureSettings = coreFeatureSettings;
 		this.testResultSettings = testResultSettings;
 		this.jiraXRayRestClient = jiraXRayRestClient;
+		this.featureRepository = featureRepository;
+		this.httpClient = httpClient;
 	}
 
 	/**
@@ -88,28 +90,15 @@ public class TestResultCollectorTask extends CollectorTask<TestResultCollector> 
 		int count = 0;
 
 		try {
-			long teamDataStart = System.currentTimeMillis();
-//			TeamDataClientImpl teamData = new TeamDataClientImpl(this.testResultCollectorRepository,
-//					this.testResultSettings, this.teamRepository, jiraXRayRestClient);
-//			count = teamData.updateTeamInformation();
-//			log("Team Data", teamDataStart, count);
-//
-//			long projectDataStart = System.currentTimeMillis();
-//			ProjectDataClientImpl projectData = new ProjectDataClientImpl(this.featureSettings,
-//					this.projectRepository, this.testResultCollectorRepository, jiraClient);
-//			count = projectData.updateProjectInformation();
-//			log("Project Data", projectDataStart, count);
-//
-//			long storyDataStart = System.currentTimeMillis();
-//			StoryDataClientImpl storyData = new StoryDataClientImpl(this.coreFeatureSettings,
-//					this.testResultSettings, this.featureRepository, this.testResultCollectorRepository, this.teamRepository, jiraClient);
-//			count = storyData.updateStoryInformation();
+			long testExecutionDataStart = System.currentTimeMillis();
+			TestExecutionRestClientImpl testExecutionData = new TestExecutionRestClientImpl(new URI(""), httpClient, this.testResultCollectorRepository, this.testResultRepository, this.featureRepository);
+			count = testExecutionData.updateTestExecutionInformation();
 			
-//			log("Story Data", storyDataStart, count);
-			log("Finished", teamDataStart);
+			log("Test Execution Data", testExecutionDataStart, count);
+			log("Finished", testExecutionDataStart);
 		} catch (Exception e) {
 			// catch exception here so we don't blow up the collector completely
-			LOGGER.error("Failed to collect jira information", e);
+			LOGGER.error("Failed to collect Jira XRay information", e);
 		}
 	}
 }

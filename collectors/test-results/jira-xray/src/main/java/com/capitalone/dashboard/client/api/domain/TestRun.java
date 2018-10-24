@@ -27,11 +27,6 @@ public class TestRun extends BasicIssue implements Versionable<TestRun> {
 
     private String testExecKey;
 
-
-
-
-
-
     public TestRun(URI self,String key,Long id){
         super(self,key,id);
     }

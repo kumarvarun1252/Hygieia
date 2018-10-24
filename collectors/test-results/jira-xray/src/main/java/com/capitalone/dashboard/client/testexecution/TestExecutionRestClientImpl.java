@@ -1,21 +1,28 @@
 package com.capitalone.dashboard.client.testexecution;
 
-import com.atlassian.httpclient.api.HttpClient;
-import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.atlassian.jira.rest.client.api.SearchRestClient;
-import com.atlassian.jira.rest.client.api.domain.*;
+import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.atlassian.jira.rest.client.api.domain.SearchResult;
 import com.atlassian.jira.rest.client.internal.async.AbstractAsynchronousRestClient;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousSearchRestClient;
 import com.atlassian.jira.rest.client.internal.async.DisposableHttpClient;
 import com.atlassian.jira.rest.client.internal.json.JsonObjectParser;
 import com.atlassian.util.concurrent.Promise;
-import com.atlassian.util.concurrent.TimedOutException;
-import com.capitalone.dashboard.client.JiraXRayRestClient;
+import com.capitalone.dashboard.client.api.domain.TestRun;
+import com.capitalone.dashboard.client.api.domain.TestStep;
 import com.capitalone.dashboard.model.Feature;
+import com.capitalone.dashboard.model.TestResult;
+import com.capitalone.dashboard.model.TestCapability;
+import com.capitalone.dashboard.model.TestSuite;
+import com.capitalone.dashboard.model.TestSuiteType;
+import com.capitalone.dashboard.model.TestCase;
+import com.capitalone.dashboard.model.TestCaseStatus;
+import com.capitalone.dashboard.model.TestCaseStep;
 import com.capitalone.dashboard.repository.FeatureRepository;
 import com.capitalone.dashboard.repository.TestResultCollectorRepository;
 import com.capitalone.dashboard.repository.TestResultRepository;
 import com.capitalone.dashboard.util.ClientUtil;
+import com.capitalone.dashboard.util.DateUtil;
 import com.capitalone.dashboard.util.FeatureCollectorConstants;
 import com.capitalone.dashboard.util.TestResultSettings;
 import com.google.common.base.Function;
@@ -34,13 +41,8 @@ import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 public class TestExecutionRestClientImpl extends AbstractAsynchronousRestClient implements TestExecutionRestClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(TestExecutionRestClientImpl.class);
@@ -49,7 +51,10 @@ public class TestExecutionRestClientImpl extends AbstractAsynchronousRestClient 
     private final  TestArrayJsonParser testsParser=new TestArrayJsonParser();
     private final static TestExecUpdateJsonGenerator execUpdateGenerator=new TestExecUpdateJsonGenerator();
     private final TestResultSettings testResultSettings = new TestResultSettings();
+    private final TestResultRepository testResultRepository;
     private final TestResultCollectorRepository testResultCollectorRepository;
+    private final FeatureRepository featureRepository;
+//    private final JiraXRayRestClient jiraXRayRestClient;
 
 
     private SearchRestClient searchRestClient=null;
@@ -61,14 +66,15 @@ public class TestExecutionRestClientImpl extends AbstractAsynchronousRestClient 
 //    private final TestResultRepository testResultRepository;
 //    private final JiraXRayRestClient jiraXRayRestClient;
 
-    public TestExecutionRestClientImpl(URI serverUri, DisposableHttpClient httpClient, TestResultCollectorRepository testResultCollectorRepository){
+    public TestExecutionRestClientImpl(URI serverUri, DisposableHttpClient httpClient, TestResultCollectorRepository testResultCollectorRepository, TestResultRepository testResultRepository, FeatureRepository featureRepository){
         super(httpClient);
         baseUri = UriBuilder.fromUri(serverUri).path("/rest/raven/{restVersion}/api/").build(PluginConstants.XRAY_REST_VERSION);
         searchRestClient=new AsynchronousSearchRestClient(UriBuilder.fromUri(serverUri).path("rest/api/latest/").build(new Object[0]),httpClient);
 
 //        this.testResultSettings = testResultSettings;
         this.testResultCollectorRepository = testResultCollectorRepository;
-//        this.testResultRepository = testResultRepository;
+        this.featureRepository = featureRepository;
+        this.testResultRepository = testResultRepository;
 //        this.jiraXRayRestClient = jiraXRayRestClient;
     }
 
@@ -76,227 +82,290 @@ public class TestExecutionRestClientImpl extends AbstractAsynchronousRestClient 
      * Explicitly updates queries for the source system, and initiates the
      * update to MongoDB from those calls.
      */
-//    public int updateTestExecutionInformation() {
-//        int count = 0;
-//
-//        //long startDate = featureCollectorRepository.findByName(FeatureCollectorConstants.JIRA).getLastExecuted();
-//
-//        String startDateStr = testResultSettings.getDeltaStartDate();
-////        String maxChangeDate = getMaxChangeDate();
-//        if (maxChangeDate != null) {
-//            startDateStr = maxChangeDate;
-//        }
-//
-//        startDateStr = getChangeDateMinutePrior(startDateStr);
-//        long startTime;
-//        try {
-//            startTime = SETTINGS_DATE_FORMAT.parse(startDateStr).getTime();
-//        } catch (ParseException e) {
-//            throw new RuntimeException(e);
-//        }
-//
-//        int pageSize = jiraClient.getPageSize();
-//
-//        updateStatuses();
-//
-//        boolean hasMore = true;
-//        for (int i = 0; hasMore; i += pageSize) {
-//            if (LOGGER.isDebugEnabled()) {
-//                LOGGER.debug("Obtaining story information starting at index " + i + "...");
-//            }
-//            long queryStart = System.currentTimeMillis();
-//            List<Issue> issues = jiraClient.getIssues(startTime, i);
-//            if (LOGGER.isDebugEnabled()) {
-//                LOGGER.debug("Story information query took " + (System.currentTimeMillis() - queryStart) + " ms");
-//            }
-//
-//            if (issues != null && !issues.isEmpty()) {
-//                updateMongoInfo(issues);
-//                count += issues.size();
-//            }
-//
-//            LOGGER.info("Loop i " + i + " pageSize " + issues.size());
-//
-//            // will result in an extra call if number of results == pageSize
-//            // but I would rather do that then complicate the jira client implementation
-//            if (issues == null || issues.size() < pageSize) {
-//                hasMore = false;
-//                break;
-//            }
-//        }
-//
-//        return count;
-//    }
+    public int updateTestExecutionInformation() {
+        int count = 0;
+        int pageSize = testResultSettings.getPageSize();
+
+        boolean hasMore = true;
+        for (int i = 0; hasMore; i += pageSize) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Obtaining story information starting at index " + i + "...");
+            }
+            long queryStart = System.currentTimeMillis();
+            List<Feature> tests = featureRepository.getStoryByType("Test Execution");
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Story information query took " + (System.currentTimeMillis() - queryStart) + " ms");
+            }
+
+            if (tests != null && !tests.isEmpty()) {
+                updateMongoInfo(tests);
+                count += tests.size();
+            }
+
+            LOGGER.info("Loop i " + i + " pageSize " + tests.size());
+
+            // will result in an extra call if number of results == pageSize
+            // but I would rather do that then complicate the jira client implementation
+            if (tests == null || tests.size() < pageSize) {
+                hasMore = false;
+                break;
+            }
+        }
+
+        return count;
+    }
 
     /**
      * Updates the MongoDB with a JSONArray received from the source system
      * back-end with story-based data.
      *
-     * @param currentPagedJiraRs
+     * @param currentPagedTestExecutions
      *            A list response of Jira issues from the source system
      */
     @SuppressWarnings({ "PMD.AvoidDeeplyNestedIfStmts", "PMD.NPathComplexity" })
-    private void updateMongoInfo(List<Issue> currentPagedJiraRs) {
+    private void updateMongoInfo(List<Feature> currentPagedTestExecutions) {
         final TestResultSettings testResultSettings = new TestResultSettings();
-
-        ObjectId jiraFeatureId = testResultCollectorRepository.findByName(FeatureCollectorConstants.JIRA_XRAY).getId();
 
         LOGGER.info("\n IN updateMongoInfo Method");
 
-        try {
-            LOGGER.info("\n IN TRY BLOCK");
-
-            TestExecution testExecution = new TestExecution(new URI(""), "EME-1946", 1977L);
-            LOGGER.info("\n TEST EXECUTION: " + testExecution);
-
-            Iterable<TestExecution.Test> tests = this.getTests(testExecution).claim();
-
-            LOGGER.info("\n TESTS: " + tests.toString());
-
-            tests.forEach(test -> {
-                LOGGER.info("\n TEST ID: " + test.getId() + " TEST SELF" + test.getSelf() + " TEST KEY" + test.getKey());
-            });
-
-//            if (this.getTests(testExecution).isDone()) {
-//                Iterable<TestExecution.Test> tests = this.getTests(testExecution).claim();
-//
-//                while (tests.iterator().hasNext()) {
-//                    LOGGER.info("\n TESTS: " + tests.toString());
-//
-//                    tests.forEach(test -> {
-//                        LOGGER.info("\n TEST ID: " + test.getId() + " TEST SELF" + test.getSelf() + " TEST KEY" + test.getKey());
-//                    });
-//            }
-
-
-//            }
-//            LOGGER.info("\n TESTS: " + tests.toString());
-//
-//            for(TestExecution.Test t:tests)
-//            {
-//                System.out.print("\n TEST KEY: " + t.getKey());
-//                System.out.print("\n TEST ID: " + t.getId());
-//                System.out.print("\n TEST Version: " + t.getVersion());
-////                assertNotNull(t);
-//            }
-
-//            tests.forEach(test -> {
-//                LOGGER.info("\n TEST ID: " + test.getId() + " TEST SELF" + test.getSelf() + " TEST KEY" + test.getKey());
-//            });
-
-        } catch (URISyntaxException u) {
-            LOGGER.error("URI Syntax Invalid");
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Size of paged Jira response: " + (currentPagedTestExecutions == null? 0 : currentPagedTestExecutions.size()));
         }
 
-//        catch (InterruptedException i) {
-//
-//        }
-//        catch (ExecutionException ex) {
-//
-//        }
-//        catch (TimeoutException t) {
-//
-//        }
+        if (currentPagedTestExecutions != null) {
+            List<TestResult> testResultsToSave = new ArrayList<>();
+            ObjectId jiraXRayFeatureId = testResultCollectorRepository.findByName(FeatureCollectorConstants.JIRA_XRAY).getId();
 
-//        if (LOGGER.isDebugEnabled()) {
-//            LOGGER.debug("Size of paged Jira response: " + (currentPagedJiraRs == null? 0 : currentPagedJiraRs.size()));
-//        }
-//
-//        if (currentPagedJiraRs != null) {
-//            List<Feature> testResultsToSave = new ArrayList<>();
-//
-//            Map<String, String> issueEpics = new HashMap<>();
-////            ObjectId jiraFeatureId = testResultCollectorRepository.findByName(FeatureCollectorConstants.JIRA_XRAY).getId();
-//            Set<String> issueTypeNames = new HashSet<>();
-//            for (String issueTypeName : testResultSettings.getJiraIssueTypeNames()) {
-//                issueTypeNames.add(issueTypeName.toLowerCase(Locale.getDefault()));
-//            }
-//
-//
-//            for (Issue issue : currentPagedJiraRs) {
-////                TestExecution.Test issueId = new TestExecution.Test(issue.getId());
-//                try {
-//                    TestExecution testExecution = new TestExecution(new URI(""), issue.getKey(), issue.getId());
-//                    Promise<Iterable<TestExecution.Test>> tests = this.getTests(testExecution);
-//                    Iterable<TestExecution.Test> itr = tests.get(10, TimeUnit.SECONDS);
-//
-//                    itr.forEach(test -> {
-//                        LOGGER.info("\n TEST ID: " + test.getId() + " TEST SELF" + test.getSelf() + " TEST KEY" + test.getKey());
-//                    });
-//
-//                } catch (URISyntaxException u) {
-//                    LOGGER.error("URI Syntax Invalid");
-//                } catch (InterruptedException i) {
-//
-//                } catch (ExecutionException ex) {
-//
-//                } catch (TimeoutException t) {
-//
-//                }
+            for (Feature testExec : currentPagedTestExecutions) {
+
+                TestResult testResult = new TestResult();
+
+                testResult.setCollectorItemId(jiraXRayFeatureId);
+                testResult.setDescription(testExec.getsName());
+                testResult.setTargetAppName(testExec.getsProjectName());
+                testResult.setType(TestSuiteType.Manual);
+                try {
+                    TestExecution testExecution = new TestExecution(new URI(""), testExec.getsNumber(), Long.parseLong(testExec.getsId()));
+                    testResult.setUrl(testExecution.getSelf().toString());
+
+                    Iterable<TestExecution.Test> tests = this.getTests(testExecution).claim();
+                    int totalCount = (int) tests.spliterator().getExactSizeIfKnown();
+                    int failCount = this.getTestCount(tests, "FAIL");
+                    int passCount = this.getTestCount(tests, "PASS");
+                    testResult.setTotalCount(totalCount);
+                    testResult.setFailureCount(failCount);
+                    testResult.setSuccessCount(passCount);
+
+                    int skipCount = totalCount - (failCount + passCount);
+                    testResult.setSkippedCount(skipCount);
+
+                    if(failCount > 0) {
+                        testResult.setResultStatus(TestCaseStatus.Failure.toString());
+                    } else if (totalCount == passCount){
+                        testResult.setResultStatus(TestCaseStatus.Success.toString());
+                    } else {
+                        testResult.setResultStatus(TestCaseStatus.Skipped.toString());
+                    }
+
+                    testResult.setTestCapabilities(this.getCapabilities(tests, testExec));
+                } catch (URISyntaxException u) {
+                    LOGGER.error("URI Syntax Invalid");
+                }
+                testResultsToSave.add(testResult);
+            }
+
+            // Saving back to MongoDB
+            testResultRepository.save(testResultsToSave);
+        }
+    }
+
+    private List<TestCapability> getCapabilities(Iterable<TestExecution.Test> tests, Feature testExec) {
+        List<TestCapability> capabilities = new ArrayList<>();
+        TestCapability capability = new TestCapability();
+        capability.setDescription(testExec.getsName());
+
+        int totalCount = (int) tests.spliterator().getExactSizeIfKnown();
+        int failCount = this.getTestCount(tests, "FAIL");
+        int passCount = this.getTestCount(tests, "PASS");
+        capability.setTotalTestSuiteCount(1);
+        capability.setType(TestSuiteType.Manual);
+
+        if(failCount > 0) {
+            capability.setStatus(TestCaseStatus.Failure);
+            capability.setFailedTestSuiteCount(1);
+        } else if (totalCount == passCount){
+            capability.setStatus(TestCaseStatus.Success);
+            capability.setSuccessTestSuiteCount(1);
+        } else {
+            capability.setStatus(TestCaseStatus.Skipped);
+            capability.setSkippedTestSuiteCount(1);
+        }
+        capability.setTestSuites(this.getTestSuites(tests, testExec));
+        capabilities.add(capability);
+
+        return capabilities;
+    }
+
+    private List<TestSuite> getTestSuites(Iterable<TestExecution.Test> tests, Feature testExec) {
+        List<TestSuite> testSuites = new ArrayList<>();
+        TestSuite testSuite = new TestSuite();
+
+        testSuite.setDescription(testExec.getsName());
+        testSuite.setType(TestSuiteType.Manual);
+        int totalCount = (int) tests.spliterator().getExactSizeIfKnown();
+        int failCount = this.getTestCount(tests, "FAIL");
+        int passCount = this.getTestCount(tests, "PASS");
+        testSuite.setTotalTestCaseCount(totalCount);
+        testSuite.setFailedTestCaseCount(failCount);
+        testSuite.setSuccessTestCaseCount(passCount);
+
+        int skipCount = totalCount - (failCount + passCount);
+        testSuite.setSkippedTestCaseCount(skipCount);
+
+        if(failCount > 0) {
+            testSuite.setStatus(TestCaseStatus.Failure);
+        } else if (totalCount == passCount){
+            testSuite.setStatus(TestCaseStatus.Success);
+        } else {
+            testSuite.setStatus(TestCaseStatus.Skipped);
+        }
+
+        testSuite.setTestCases(this.getTestCases(tests));
+        testSuites.add(testSuite);
+
+        return testSuites;
+    }
+
+    private List<TestCase> getTestCases(Iterable<TestExecution.Test> tests) {
+        List<TestCase> testCases = new ArrayList<>();
+
+        for (TestExecution.Test test : tests) {
+            TestCase testCase = new TestCase();
+
+            try {
+                TestRun testRun = new TestRun(new URI(""), test.getKey(), test.getId());
+
+                testCase.setId(testRun.getId().toString());
+                testCase.setDescription(test.toString());
+                int totalSteps = (int) testRun.getSteps().spliterator().getExactSizeIfKnown();
+                int failSteps = this.getStepCount(testRun, "FAIL");
+                int passSteps = this.getStepCount(testRun, "PASS");
+                int skipSteps = totalSteps - (failSteps + passSteps);
+                testCase.setTotalTestStepCount(totalSteps);
+                testCase.setFailedTestStepCount(failSteps);
+                testCase.setSuccessTestStepCount(passSteps);
+                testCase.setSkippedTestStepCount(skipSteps);
+                if(failSteps > 0) {
+                    testCase.setStatus(TestCaseStatus.Failure);
+                } else if (totalSteps == passSteps){
+                    testCase.setStatus(TestCaseStatus.Success);
+                } else {
+                    testCase.setStatus(TestCaseStatus.Skipped);
+                }
+
+                testCase.setTestSteps(this.getTestSteps(testRun));
+
+            } catch (URISyntaxException u) {
+                LOGGER.error("URI Syntax Invalid");
+            }
+            testCases.add(testCase);
+        }
+
+        return testCases;
+    }
+
+    private List<TestCaseStep> getTestSteps(TestRun testRun) {
+        List<TestCaseStep> testSteps = new ArrayList<>();
+
+        for (TestStep testStep : testRun.getSteps()) {
+            TestCaseStep testCaseStep = new TestCaseStep();
+
+            testCaseStep.setId(testStep.getId().toString());
+            testCaseStep.setDescription(testStep.getStep().getRaw());
+            if (testStep.getStatus().equals("PASS")) {
+                testCaseStep.setStatus(TestCaseStatus.Success);
+            } else if (testStep.getStatus().equals("FAIL")) {
+                testCaseStep.setStatus(TestCaseStatus.Failure);
+            } else {
+                testCaseStep.setStatus(TestCaseStatus.Skipped);
+            }
+            testSteps.add(testCaseStep);
+        }
 
 
-//                Map<String, IssueField> fields = buildFieldMap(issue.getFields());
-//                IssueType issueType = issue.getIssueType();
-//                User assignee = issue.getAssignee();
-//                IssueField epic = fields.get(featureSettings.getJiraEpicIdFieldName());
-//                IssueField sprint = fields.get(featureSettings.getJiraSprintDataFieldName());
-//
-//                if (issueTypeNames.contains(TOOLS.sanitizeResponse(issueType.getName()).toLowerCase(Locale.getDefault()))) {
-//                    if (LOGGER.isDebugEnabled()) {
-//                        LOGGER.debug(String.format("[%-12s] %s",
-//                                TOOLS.sanitizeResponse(issue.getKey()),
-//                                TOOLS.sanitizeResponse(issue.getSummary())));
-//                    }
-//
-//                    // collectorId
-//                    feature.setCollectorId(jiraFeatureId);
-//
-//                    // ID
-//                    feature.setsId(TOOLS.sanitizeResponse(issue.getId()));
-//
-//                    // Type
-//                    feature.setsTypeId(TOOLS.sanitizeResponse(issueType.getId()));
-//                    feature.setsTypeName(TOOLS.sanitizeResponse(issueType.getName()));
-//
-//                    processFeatureData(feature, issue, fields);
-//
-//                    // delay processing epic data for performance
-//                    if (epic != null && epic.getValue() != null && !TOOLS.sanitizeResponse(epic.getValue()).isEmpty()) {
-//                        issueEpics.put(feature.getsId(), TOOLS.sanitizeResponse(epic.getValue()));
-//                    }
-//
-//
-//                    processSprintData(feature, sprint);
-//
-//                    processAssigneeData(feature, assignee);
-//
-//                    featuresToSave.add(feature);
-//                }
-//            }
-//
-//            // Load epic data into cache
-//            if (LOGGER.isDebugEnabled()) {
-//                LOGGER.debug("Processing epic data");
-//            }
-//
-//            long epicStartTime = System.currentTimeMillis();
-//            Collection<String> epicsToLoad = issueEpics.values();
-//            loadEpicData(epicsToLoad);
-//
-//            for (Feature feature : featuresToSave) {
-//                String epicKey = issueEpics.get(feature.getsId());
-//
-//                processEpicData(feature, epicKey);
-//            }
-//
-//            if (LOGGER.isDebugEnabled()) {
-//                LOGGER.debug("Processing epic data took " + (System.currentTimeMillis() - epicStartTime) + " ms");
-//            }
-//
-//            // Saving back to MongoDB
-//            featureRepo.save(featuresToSave);
-//            }
-//        }
+
+        return testSteps;
+    }
+
+    private int getTestCount(Iterable<TestExecution.Test> tests, String statusType) {
+        int count = 0;
+
+        for (TestExecution.Test test : tests) {
+            try {
+                TestRun testRun = new TestRun(new URI(""), test.getKey(), test.getId());
+                if (statusType == "FAIL") {
+                    if (testRun.getStatus().equals("FAIL")) {
+                        count++;
+                    }
+                } else if (statusType == "PASS") {
+                    if (testRun.getStatus().equals("PASS")) {
+                        count++;
+                    }
+                }
+            } catch (URISyntaxException u) {
+                LOGGER.error("URI Syntax Invalid");
+            }
+        }
+
+        return count;
+    }
+
+    private int getStepCount(TestRun testRun, String statusType) {
+        int count = 0;
+
+        for (TestStep testStep : testRun.getSteps()) {
+            if (statusType == "FAIL") {
+                if (testStep.getStatus().equals("FAIL")) {
+                    count++;
+                }
+            } else if (statusType == "PASS") {
+                if (testStep.getStatus().equals("PASS")) {
+                    count++;
+                }
+            }
+        }
+
+        return count;
+    }
+
+    /**
+     * Retrieves the maximum change date for a given query.
+     *
+     * @return A list object of the maximum change date
+     */
+    public String getMaxChangeDate() {
+        String data = null;
+
+        try {
+            List<Feature> response = featureRepository
+                    .findTopByCollectorIdAndChangeDateGreaterThanOrderByChangeDateDesc(
+                            testResultCollectorRepository.findByName(FeatureCollectorConstants.JIRA_XRAY).getId(),
+                            testResultSettings.getDeltaStartDate());
+            if ((response != null) && !response.isEmpty()) {
+                data = response.get(0).getChangeDate();
+            }
+        } catch (Exception e) {
+            LOGGER.error("There was a problem retrieving or parsing data from the local "
+                    + "repository while retrieving a max change date\nReturning null", e);
+        }
+
+        return data;
+    }
+
+    private String getChangeDateMinutePrior(String changeDateISO) {
+        int priorMinutes = this.testResultSettings.getScheduledPriorMin();
+        return DateUtil.toISODateRealTimeFormat(DateUtil.getDatePriorToMinutes(
+                DateUtil.fromISODateTimeFormat(changeDateISO), priorMinutes));
     }
 
     public Promise<Iterable<TestExecution.Test>> getTests(TestExecution testExecution) {

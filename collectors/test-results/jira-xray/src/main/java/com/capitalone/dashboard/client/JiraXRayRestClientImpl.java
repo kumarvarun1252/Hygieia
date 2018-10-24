@@ -8,7 +8,9 @@ import com.capitalone.dashboard.client.testexecution.TestExecutionRestClientImpl
 import com.capitalone.dashboard.client.testrun.TestRunRestClient;
 import com.capitalone.dashboard.client.testrun.TestRunRestClientImpl;
 import com.capitalone.dashboard.client.testset.TestSetRestClient;
+import com.capitalone.dashboard.repository.FeatureRepository;
 import com.capitalone.dashboard.repository.TestResultCollectorRepository;
+import com.capitalone.dashboard.repository.TestResultRepository;
 
 import java.net.URI;
 
@@ -19,10 +21,10 @@ public class JiraXRayRestClientImpl extends AsynchronousJiraRestClient implement
     private TestSetRestClient testSetClient=null;
 
 
-    public JiraXRayRestClientImpl(URI serverUri, DisposableHttpClient httpClient, TestResultCollectorRepository testResultCollectorRepository) {
+    public JiraXRayRestClientImpl(URI serverUri, DisposableHttpClient httpClient, TestResultCollectorRepository testResultCollectorRepository, TestResultRepository testResultRepository, FeatureRepository featureRepository) {
         super(serverUri, httpClient);
         this.testRunClient=new TestRunRestClientImpl(serverUri,httpClient);
-        this.testExecutionClient=new TestExecutionRestClientImpl(serverUri,httpClient,testResultCollectorRepository);
+        this.testExecutionClient=new TestExecutionRestClientImpl(serverUri,httpClient,testResultCollectorRepository, testResultRepository, featureRepository);
     }
 
     public TestRestClient getTestClient() {
