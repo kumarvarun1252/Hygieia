@@ -2,7 +2,7 @@ package com.capitalone.dashboard.client.testrun;
 
 import com.capitalone.dashboard.client.JiraXRayRestClientImpl;
 import com.capitalone.dashboard.client.JiraXRayRestClientSupplier;
-import com.capitalone.dashboard.client.JiraXrayRestClientFactory;
+//import com.capitalone.dashboard.client.JiraXrayRestClientFactory;
 import com.google.common.collect.Iterables;
 import com.capitalone.dashboard.client.api.domain.*;
 import org.codehaus.jettison.json.JSONObject;

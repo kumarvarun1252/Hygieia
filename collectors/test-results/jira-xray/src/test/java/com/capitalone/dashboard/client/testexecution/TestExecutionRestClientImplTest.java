@@ -2,7 +2,7 @@ package com.capitalone.dashboard.client.testexecution;
 
 import com.capitalone.dashboard.client.JiraXRayRestClientImpl;
 import com.capitalone.dashboard.client.JiraXRayRestClientSupplier;
-import com.capitalone.dashboard.client.JiraXrayRestClientFactory;
+//import com.capitalone.dashboard.client.JiraXRayRestClientFactory;
 import com.capitalone.dashboard.client.api.domain.TestExecution;
 import org.junit.After;
 import org.junit.Before;

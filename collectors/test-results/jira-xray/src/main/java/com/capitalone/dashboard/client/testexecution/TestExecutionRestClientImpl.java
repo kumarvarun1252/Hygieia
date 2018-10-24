@@ -54,17 +54,10 @@ public class TestExecutionRestClientImpl extends AbstractAsynchronousRestClient 
     private final TestResultRepository testResultRepository;
     private final TestResultCollectorRepository testResultCollectorRepository;
     private final FeatureRepository featureRepository;
-//    private final JiraXRayRestClient jiraXRayRestClient;
-
 
     private SearchRestClient searchRestClient=null;
 
     private final DateFormat SETTINGS_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-
-//    private final TestResultSettings testResultSettings;
-//    private final TestResultCollectorRepository testResultCollectorRepository;
-//    private final TestResultRepository testResultRepository;
-//    private final JiraXRayRestClient jiraXRayRestClient;
 
     public TestExecutionRestClientImpl(URI serverUri, DisposableHttpClient httpClient, TestResultCollectorRepository testResultCollectorRepository, TestResultRepository testResultRepository, FeatureRepository featureRepository){
         super(httpClient);
@@ -75,7 +68,6 @@ public class TestExecutionRestClientImpl extends AbstractAsynchronousRestClient 
         this.testResultCollectorRepository = testResultCollectorRepository;
         this.featureRepository = featureRepository;
         this.testResultRepository = testResultRepository;
-//        this.jiraXRayRestClient = jiraXRayRestClient;
     }
 
     /**
@@ -85,6 +77,8 @@ public class TestExecutionRestClientImpl extends AbstractAsynchronousRestClient 
     public int updateTestExecutionInformation() {
         int count = 0;
         int pageSize = testResultSettings.getPageSize();
+
+//        updateStatuses();
 
         boolean hasMore = true;
         for (int i = 0; hasMore; i += pageSize) {
@@ -125,6 +119,7 @@ public class TestExecutionRestClientImpl extends AbstractAsynchronousRestClient 
     @SuppressWarnings({ "PMD.AvoidDeeplyNestedIfStmts", "PMD.NPathComplexity" })
     private void updateMongoInfo(List<Feature> currentPagedTestExecutions) {
         final TestResultSettings testResultSettings = new TestResultSettings();
+
 
         LOGGER.info("\n IN updateMongoInfo Method");
 

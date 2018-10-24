@@ -1,10 +1,9 @@
 package com.capitalone.dashboard.client;
 
-import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClient;
-import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
-import com.atlassian.jira.rest.client.internal.async.DisposableHttpClient;
+import com.capitalone.dashboard.repository.FeatureRepository;
 import com.capitalone.dashboard.repository.TestResultCollectorRepository;
+import com.capitalone.dashboard.repository.TestResultRepository;
 import com.capitalone.dashboard.util.TestResultSettings;
 import com.capitalone.dashboard.util.Supplier;
 import org.apache.commons.codec.binary.Base64;
@@ -22,69 +21,60 @@ import java.util.StringTokenizer;
 
 /**
  * Separate JiraXRayRestClient supplier to make unit testing easier
- * 
- * @author <a href="mailto:MarkRx@users.noreply.github.com">MarkRx</a>
  */
 @Component
 public class JiraXRayRestClientSupplier implements Supplier<AsynchronousJiraRestClient> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(JiraXRayRestClientSupplier.class);
-	
+
 	@Autowired
 	private TestResultSettings testResultSettings;
+	private TestResultRepository testResultRepository;
 	private TestResultCollectorRepository testResultCollectorRepository;
-	
+	private FeatureRepository featureRepository;
+
 	@Override
 	public AsynchronousJiraRestClient get() {
 		AsynchronousJiraRestClient client = null;
-		
-//		String jiraCredentials = testResultSettings.getJiraCredentials();
-//		String jiraBaseUrl = testResultSettings.getJiraBaseUrl();
 
-		String jiraCredentials = "RU1CMjM1OlNlY3JldDUy";
-		String jiraBaseUrl = "https://jira.kdc.capitalone.com/";
-		String proxyUri = "http://proxy.kdc.capitalone.com";
-		String proxyPort = "8099";
-		DisposableHttpClient httpClient = null;
-		
+		String jiraCredentials = testResultSettings.getJiraCredentials();
+		String jiraBaseUrl = testResultSettings.getJiraBaseUrl();
+		String proxyUri = null;
+		String proxyPort = null;
+
 		URI jiraUri = null;
-		
-//		try {
-//			if (testResultSettings.getJiraProxyUrl() != null && !testResultSettings.getJiraProxyUrl().isEmpty() && (testResultSettings.getJiraProxyPort() != null)) {
-//				proxyUri = this.testResultSettings.getJiraProxyUrl();
-//				proxyPort = this.testResultSettings.getJiraProxyPort();
-//
-//				jiraUri = this.createJiraConnection(jiraBaseUrl,
-//						proxyUri + ":" + proxyPort,
-//						this.decodeCredentials(jiraCredentials).get("username"),
-//						this.decodeCredentials(jiraCredentials).get("password"));
-//			} else {
-// 				jiraUri = new URI(jiraBaseUrl);
-//			}
-			
-//			InetAddress.getByName(jiraUri.getHost());
-		jiraUri = this.createJiraConnection(jiraBaseUrl,
-				proxyUri + ":" + proxyPort,
-				this.decodeCredentials(jiraCredentials).get("username"),
-				this.decodeCredentials(jiraCredentials).get("password"));
 
-		client = new JiraXrayRestClientFactory()
-				.createWithBasicHttpAuthentication(jiraUri,
-						decodeCredentials(jiraCredentials).get("username"),
-						decodeCredentials(jiraCredentials).get("password"), testResultCollectorRepository);
-			
-//		} catch ( URISyntaxException e) {
-//			LOGGER.error("The Jira host name is invalid. Further jira collection cannot proceed.");
-//
-//			LOGGER.debug("Exception", e);
-//		}
-		
+		try {
+			if (testResultSettings.getJiraProxyUrl() != null && !testResultSettings.getJiraProxyUrl().isEmpty() && (testResultSettings.getJiraProxyPort() != null)) {
+				proxyUri = this.testResultSettings.getJiraProxyUrl();
+				proxyPort = this.testResultSettings.getJiraProxyPort();
+
+				jiraUri = this.createJiraConnection(jiraBaseUrl,
+						proxyUri + ":" + proxyPort,
+						this.decodeCredentials(jiraCredentials).get("username"),
+						this.decodeCredentials(jiraCredentials).get("password"));
+			} else {
+				jiraUri = new URI(jiraBaseUrl);
+			}
+
+			InetAddress.getByName(jiraUri.getHost());
+			client = new JiraXRayRestClientFactory()
+					.createWithBasicHttpAuthentication(jiraUri,
+							decodeCredentials(jiraCredentials).get("username"),
+							decodeCredentials(jiraCredentials).get("password"), testResultCollectorRepository, testResultRepository, featureRepository);
+
+		} catch (UnknownHostException | URISyntaxException e) {
+			LOGGER.error("The Jira host name is invalid. Further jira collection cannot proceed.");
+
+			LOGGER.debug("Exception", e);
+		}
+
 		return client;
 	}
-	
+
 	/**
 	 * Converts Jira basic authentication credentials from Base 64 string to a
 	 * username/password map
-	 * 
+	 *
 	 * @param jiraBasicAuthCredentialsInBase64
 	 *            Base64-encoded single string in the following format:
 	 *            <em>username:password</em><br/>
@@ -96,7 +86,7 @@ public class JiraXRayRestClientSupplier implements Supplier<AsynchronousJiraRest
 	private Map<String, String> decodeCredentials(String jiraBasicAuthCredentialsInBase64) {
 		Map<String, String> credMap = new LinkedHashMap<String, String>();
 		if (jiraBasicAuthCredentialsInBase64 != null) {
-				//the tokenize includes a \n to ensure we trim those off the end (mac base64 adds these!)
+			//the tokenize includes a \n to ensure we trim those off the end (mac base64 adds these!)
 			StringTokenizer tokenizer = new StringTokenizer(new String(
 					Base64.decodeBase64(jiraBasicAuthCredentialsInBase64)), ":\n");
 			for (int i = 0; tokenizer.hasMoreTokens(); i++) {
@@ -107,7 +97,7 @@ public class JiraXRayRestClientSupplier implements Supplier<AsynchronousJiraRest
 				}
 			}
 		}
-		
+
 		return credMap;
 
 	}
@@ -115,7 +105,7 @@ public class JiraXRayRestClientSupplier implements Supplier<AsynchronousJiraRest
 	/**
 	 * Generates an authenticated proxy connection URI and Jira URI for use in
 	 * talking to Jira.
-	 * 
+	 *
 	 * @param jiraBaseUri
 	 *            A string representation of a Jira URI
 	 * @param fullProxyUrl
@@ -129,7 +119,7 @@ public class JiraXRayRestClientSupplier implements Supplier<AsynchronousJiraRest
 	 * @return A fully configured Jira URI with authenticated proxy connection
 	 */
 	private URI createJiraConnection(String jiraBaseUri, String fullProxyUrl, String username,
-			String password) {
+									 String password) {
 		final String uname = username;
 		final String pword = password;
 		Proxy proxy = null;
