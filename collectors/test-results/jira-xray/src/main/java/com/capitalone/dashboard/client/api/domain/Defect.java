@@ -10,7 +10,6 @@ import java.net.URI;
 public class Defect extends BasicIssue {
     private String summary;
     private String myStatus;
-    // private com.atlassian.jira.rest.client.api.domain.Status status;
 
     public Defect(String key){
         super(null,key,null);

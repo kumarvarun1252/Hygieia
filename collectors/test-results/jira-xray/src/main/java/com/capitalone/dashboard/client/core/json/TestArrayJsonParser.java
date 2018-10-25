@@ -15,7 +15,7 @@ public class TestArrayJsonParser implements JsonArrayParser<Iterable<TestExecuti
 
     public Iterable<TestExecution.Test> parse(JSONArray jsonArray) throws JSONException {
         ArrayList<TestExecution.Test> tests=new ArrayList<TestExecution.Test>();
-        for(int i=0;i< jsonArray.length();i++){
+        for (int i = 0; i < jsonArray.length(); i++){
             tests.add(T_PARSER.parse(jsonArray.getJSONObject(i)));
         }
     return tests;

@@ -36,7 +36,7 @@ public class TestRunJsonParser implements JsonObjectParser<TestRun> {
     public final static String KEY_DEFECTS="defects";
     public final static String KEY_EVIDENCES="evidences";
     public final static String KEY_TESTSTEPS="steps";
-    // CUMCUMBER TESTS
+    // TODO: CUMCUMBER TESTS
     // public final static String KEY_SCENARIO="scenario";
     // public final static String KEY_SCENARIO_OUTLINE="scenarioOutline";
 

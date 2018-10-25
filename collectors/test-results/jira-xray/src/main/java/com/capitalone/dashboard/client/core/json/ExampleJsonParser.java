@@ -16,11 +16,7 @@ import java.util.List;
  */
 public class ExampleJsonParser implements JsonObjectParser<Example> {
     private final static String KEY_ID="id";
-    // private final static String KEY_RANK="rank";
     private final static String KEY_VALUES="values";
-    // private final static String KEY_STATUS="status";
-
-
 
     public Example parse(JSONObject jsonObject) throws JSONException {
         jsonObject.put("self",""); // TODO: ADD URI.
@@ -39,7 +35,7 @@ public class ExampleJsonParser implements JsonObjectParser<Example> {
     private List<Object> getValues(JSONObject jsonObject) throws JSONException {
         JSONArray jsonValues=jsonObject.getJSONArray(KEY_VALUES);
         ArrayList<Object> values=new ArrayList<Object>();
-        for(int i=0;i<jsonValues.length();i++){
+        for (int i = 0; i < jsonValues.length(); i++){
                 values.add((Object)jsonValues.getString(i));
         }
    return values;

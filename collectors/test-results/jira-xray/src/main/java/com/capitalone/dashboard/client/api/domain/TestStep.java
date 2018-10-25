@@ -21,7 +21,6 @@ public class TestStep extends BasicIssue implements Versionable<TestStep> {
     private TestStep oldVersion = null;
 
     //TODO: To be used in future
-    // private Long id;
     private Integer index;
     private RendereableItem step;
     private RendereableItem data;

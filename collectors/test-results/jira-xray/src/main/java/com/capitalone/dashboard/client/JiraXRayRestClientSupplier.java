@@ -1,6 +1,9 @@
 package com.capitalone.dashboard.client;
 
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClient;
+import com.capitalone.dashboard.repository.FeatureRepository;
+import com.capitalone.dashboard.repository.TestResultCollectorRepository;
+import com.capitalone.dashboard.repository.TestResultRepository;
 import com.capitalone.dashboard.util.TestResultSettings;
 import com.capitalone.dashboard.util.Supplier;
 import org.apache.commons.codec.binary.Base64;
@@ -22,10 +25,13 @@ import java.util.StringTokenizer;
 @Component
 public class JiraXRayRestClientSupplier implements Supplier<AsynchronousJiraRestClient> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(JiraXRayRestClientSupplier.class);
-	
+
 	@Autowired
 	private TestResultSettings testResultSettings;
-	
+	TestResultRepository testResultRepository;
+	TestResultCollectorRepository testResultCollectorRepository;
+	FeatureRepository featureRepository;
+
 	@Override
 	public AsynchronousJiraRestClient get() {
 		AsynchronousJiraRestClient client = null;
@@ -54,7 +60,7 @@ public class JiraXRayRestClientSupplier implements Supplier<AsynchronousJiraRest
 			client = new JiraXRayRestClientFactory()
 					.createWithBasicHttpAuthentication(jiraUri,
 							decodeCredentials(jiraCredentials).get("username"),
-							decodeCredentials(jiraCredentials).get("password"));
+							decodeCredentials(jiraCredentials).get("password"), testResultCollectorRepository, testResultRepository, featureRepository);
 
 		} catch (UnknownHostException | URISyntaxException e) {
 			LOGGER.error("The Jira host name is invalid. Further jira collection cannot proceed.");

@@ -16,7 +16,6 @@ public class EvidenceJsonParser implements JsonObjectParser<Evidence> {
     public static final String KEY_ID="id";
     public static final String KEY_FILENAME="fileName";
     public static final String KEY_FILESIZE="fileSize";
-    // public static final String KEY_CREATED="created";
     public static final String KEY_AUTHOR="author";
     public static final String KEY_FILEURI="fileURL";
 

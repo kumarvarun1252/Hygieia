@@ -84,7 +84,6 @@ public class TestRun extends BasicIssue implements Versionable<TestRun> {
                 }
                 myTestRun.setDefects(cloneDefects);
             }
-        // myTestRun.resetVersion();
         return myTestRun;
     }
 
