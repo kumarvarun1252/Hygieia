@@ -1,11 +1,21 @@
 package com.capitalone.dashboard.client;
 
-import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClient;
-import com.capitalone.dashboard.repository.FeatureRepository;
-import com.capitalone.dashboard.repository.TestResultCollectorRepository;
-import com.capitalone.dashboard.repository.TestResultRepository;
+import java.io.IOException;
+import java.net.Authenticator;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.PasswordAuthentication;
+import java.net.Proxy;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.UnknownHostException;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.StringTokenizer;
+
 import com.capitalone.dashboard.util.TestResultSettings;
-import com.capitalone.dashboard.util.Supplier;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -13,28 +23,25 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.net.*;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.StringTokenizer;
+import com.atlassian.jira.rest.client.api.JiraRestClient;
+import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
+import com.capitalone.dashboard.util.Supplier;
 
 /**
- * Separate JiraXRayRestClient supplier to make unit testing easier
+ * Separate JiraRestClient supplier to make unit testing easier
+ *
+ * @author <a href="mailto:MarkRx@users.noreply.github.com">MarkRx</a>
  */
 @Component
-public class JiraXRayRestClientSupplier implements Supplier<AsynchronousJiraRestClient> {
+public class JiraXRayRestClientSupplier implements Supplier<JiraRestClient> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(JiraXRayRestClientSupplier.class);
 
 	@Autowired
 	private TestResultSettings testResultSettings;
-	TestResultRepository testResultRepository;
-	TestResultCollectorRepository testResultCollectorRepository;
-	FeatureRepository featureRepository;
 
 	@Override
-	public AsynchronousJiraRestClient get() {
-		AsynchronousJiraRestClient client = null;
+	public JiraRestClient get() {
+		JiraRestClient client = null;
 
 		String jiraCredentials = testResultSettings.getJiraCredentials();
 		String jiraBaseUrl = testResultSettings.getJiraBaseUrl();
@@ -57,10 +64,10 @@ public class JiraXRayRestClientSupplier implements Supplier<AsynchronousJiraRest
 			}
 
 			InetAddress.getByName(jiraUri.getHost());
-			client = new JiraXRayRestClientFactory()
+			client = new AsynchronousJiraRestClientFactory()
 					.createWithBasicHttpAuthentication(jiraUri,
 							decodeCredentials(jiraCredentials).get("username"),
-							decodeCredentials(jiraCredentials).get("password"), testResultCollectorRepository, testResultRepository, featureRepository);
+							decodeCredentials(jiraCredentials).get("password"));
 
 		} catch (UnknownHostException | URISyntaxException e) {
 			LOGGER.error("The Jira host name is invalid. Further jira collection cannot proceed.");

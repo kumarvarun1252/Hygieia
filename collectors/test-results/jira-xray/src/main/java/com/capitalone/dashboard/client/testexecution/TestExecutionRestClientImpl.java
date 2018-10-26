@@ -8,6 +8,7 @@ import com.atlassian.jira.rest.client.internal.async.AsynchronousSearchRestClien
 import com.atlassian.jira.rest.client.internal.async.DisposableHttpClient;
 import com.atlassian.jira.rest.client.internal.json.JsonObjectParser;
 import com.atlassian.util.concurrent.Promise;
+import com.capitalone.dashboard.client.JiraXRayRestClient;
 import com.capitalone.dashboard.client.api.domain.TestRun;
 import com.capitalone.dashboard.client.api.domain.TestStep;
 import com.capitalone.dashboard.model.Feature;
@@ -21,8 +22,6 @@ import com.capitalone.dashboard.model.TestCaseStep;
 import com.capitalone.dashboard.repository.FeatureRepository;
 import com.capitalone.dashboard.repository.TestResultCollectorRepository;
 import com.capitalone.dashboard.repository.TestResultRepository;
-//import com.capitalone.dashboard.util.ClientUtil;
-//import com.capitalone.dashboard.util.DateUtil;
 import com.capitalone.dashboard.util.FeatureCollectorConstants;
 import com.capitalone.dashboard.util.TestResultSettings;
 import com.google.common.base.Function;
@@ -30,6 +29,7 @@ import com.capitalone.dashboard.client.api.domain.TestExecution;
 import com.capitalone.dashboard.client.core.PluginConstants;
 import com.capitalone.dashboard.client.core.json.TestArrayJsonParser;
 import com.capitalone.dashboard.client.core.json.gen.TestExecUpdateJsonGenerator;
+import com.sun.jndi.toolkit.url.Uri;
 import org.bson.types.ObjectId;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -54,20 +54,32 @@ public class TestExecutionRestClientImpl extends AbstractAsynchronousRestClient 
     private final TestResultRepository testResultRepository;
     private final TestResultCollectorRepository testResultCollectorRepository;
     private final FeatureRepository featureRepository;
+    private final JiraXRayRestClient jiraXRayRestClient;
+    private final DisposableHttpClient disposableHttpClient;
 
     private SearchRestClient searchRestClient=null;
 
 //    private final DateFormat SETTINGS_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
-    public TestExecutionRestClientImpl(URI serverUri, DisposableHttpClient httpClient, TestResultCollectorRepository testResultCollectorRepository, TestResultRepository testResultRepository, FeatureRepository featureRepository){
+    public TestExecutionRestClientImpl(DisposableHttpClient httpClient, TestResultCollectorRepository testResultCollectorRepository,
+                                       TestResultRepository testResultRepository, FeatureRepository featureRepository, JiraXRayRestClient jiraXRayRestClient){
         super(httpClient);
-        baseUri = UriBuilder.fromUri(serverUri).path("/rest/raven/{restVersion}/api/").build(PluginConstants.XRAY_REST_VERSION);
-        searchRestClient=new AsynchronousSearchRestClient(UriBuilder.fromUri(serverUri).path("rest/api/latest/").build(new Object[0]),httpClient);
+        //            baseUri = UriBuilder.fromUri((testResultSettings.getJiraBaseUrl())).path("/rest/raven/{restVersion}/api/").build(PluginConstants.XRAY_REST_VERSION);
+
+        try {
+            baseUri = new URI("https://jira.kdc.capitalone.com/rest/raven/1.0/api/");
+        } catch (URISyntaxException e) {
+
+        }
+        LOGGER.info("BASE URI ************" + baseUri);
+//        searchRestClient=new AsynchronousSearchRestClient(UriBuilder.fromUri(serverUri).path("rest/api/latest/").build(new Object[0]),httpClient);
 
 //        this.testResultSettings = testResultSettings;
         this.testResultCollectorRepository = testResultCollectorRepository;
         this.featureRepository = featureRepository;
         this.testResultRepository = testResultRepository;
+        this.jiraXRayRestClient = jiraXRayRestClient;
+        this.disposableHttpClient = httpClient;
     }
 
     /**
@@ -76,7 +88,7 @@ public class TestExecutionRestClientImpl extends AbstractAsynchronousRestClient 
      */
     public int updateTestExecutionInformation() {
         int count = 0;
-        int pageSize = testResultSettings.getPageSize();
+        int pageSize = jiraXRayRestClient.getPageSize();
 
 //        updateStatuses();
 
@@ -93,6 +105,7 @@ public class TestExecutionRestClientImpl extends AbstractAsynchronousRestClient 
 
             if (tests != null && !tests.isEmpty()) {
                 updateMongoInfo(tests);
+                LOGGER.info("***************** NUMBER OF TESTS: " + tests.size());
                 count += tests.size();
             }
 
@@ -119,9 +132,12 @@ public class TestExecutionRestClientImpl extends AbstractAsynchronousRestClient 
     @SuppressWarnings({ "PMD.AvoidDeeplyNestedIfStmts", "PMD.NPathComplexity" })
     private void updateMongoInfo(List<Feature> currentPagedTestExecutions) {
 //        final TestResultSettings testResultSettings = new TestResultSettings();
+        DisposableHttpClient httpClient;
 
+        TestExecutionRestClientImpl restClient = new TestExecutionRestClientImpl(disposableHttpClient, testResultCollectorRepository, testResultRepository, featureRepository, jiraXRayRestClient);
 
         LOGGER.info("\n IN updateMongoInfo Method");
+        LOGGER.info("\n TEST Execution SIZE: " + currentPagedTestExecutions.size());
 
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Size of paged Jira response: " + (currentPagedTestExecutions == null? 0 : currentPagedTestExecutions.size()));
@@ -129,43 +145,51 @@ public class TestExecutionRestClientImpl extends AbstractAsynchronousRestClient 
 
         if (currentPagedTestExecutions != null) {
             List<TestResult> testResultsToSave = new ArrayList<>();
-            ObjectId jiraXRayFeatureId = testResultCollectorRepository.findByName(FeatureCollectorConstants.JIRA_XRAY).getId();
+//            ObjectId jiraXRayFeatureId = testResultCollectorRepository.findByName(FeatureCollectorConstants.JIRA_XRAY).getId();
 
             for (Feature testExec : currentPagedTestExecutions) {
 
                 TestResult testResult = new TestResult();
 
-                testResult.setCollectorItemId(jiraXRayFeatureId);
+//                testResult.setCollectorItemId(jiraXRayFeatureId);
                 testResult.setDescription(testExec.getsName());
+                LOGGER.info("\n TEST Execution Name: " + testExec.getsName());
+                LOGGER.info("\n TEST Execution Number: " + testExec.getsNumber());
+                LOGGER.info("\n TEST Execution ID: " + testExec.getsId());
+
                 testResult.setTargetAppName(testExec.getsProjectName());
                 testResult.setType(TestSuiteType.Manual);
-                try {
-                    TestExecution testExecution = new TestExecution(new URI(""), testExec.getsNumber(), Long.parseLong(testExec.getsId()));
-                    testResult.setUrl(testExecution.getSelf().toString());
-
-                    Iterable<TestExecution.Test> tests = this.getTests(testExecution).claim();
-                    int totalCount = (int) tests.spliterator().getExactSizeIfKnown();
-                    int failCount = this.getTestCount(tests, "FAIL");
-                    int passCount = this.getTestCount(tests, "PASS");
-                    testResult.setTotalCount(totalCount);
-                    testResult.setFailureCount(failCount);
-                    testResult.setSuccessCount(passCount);
-
-                    int skipCount = totalCount - (failCount + passCount);
-                    testResult.setSkippedCount(skipCount);
-
-                    if(failCount > 0) {
-                        testResult.setResultStatus(TestCaseStatus.Failure.toString());
-                    } else if (totalCount == passCount){
-                        testResult.setResultStatus(TestCaseStatus.Success.toString());
-                    } else {
-                        testResult.setResultStatus(TestCaseStatus.Skipped.toString());
-                    }
-
-                    testResult.setTestCapabilities(this.getCapabilities(tests, testExec));
-                } catch (URISyntaxException u) {
-                    LOGGER.error("URI Syntax Invalid");
-                }
+//                try {
+//                    TestExecution testExecution = new TestExecution(new URI(""), testExec.getsNumber(), Long.parseLong(testExec.getsId()));
+//                    LOGGER.info("\n TEST Execution KEY: " + testExecution.getKey());
+//                    testResult.setUrl(testExecution.getSelf().toString());
+//
+//                    Iterable<TestExecution.Test> tests = restClient.getTests(testExecution).claim();
+//
+//                    int totalCount = (int) tests.spliterator().getExactSizeIfKnown();
+//                    LOGGER.info("\n TOTAL TESTS: " + totalCount);
+//
+//                    int failCount = this.getTestCount(tests, "FAIL");
+//                    int passCount = this.getTestCount(tests, "PASS");
+//                    testResult.setTotalCount(totalCount);
+//                    testResult.setFailureCount(failCount);
+//                    testResult.setSuccessCount(passCount);
+//
+//                    int skipCount = totalCount - (failCount + passCount);
+//                    testResult.setSkippedCount(skipCount);
+//
+//                    if(failCount > 0) {
+//                        testResult.setResultStatus(TestCaseStatus.Failure.toString());
+//                    } else if (totalCount == passCount){
+//                        testResult.setResultStatus(TestCaseStatus.Success.toString());
+//                    } else {
+//                        testResult.setResultStatus(TestCaseStatus.Skipped.toString());
+//                    }
+//
+//                    testResult.setTestCapabilities(this.getCapabilities(tests, testExec));
+//                } catch (URISyntaxException u) {
+//                    LOGGER.error("URI Syntax Invalid");
+//                }
                 testResultsToSave.add(testResult);
             }
 
@@ -358,6 +382,8 @@ public class TestExecutionRestClientImpl extends AbstractAsynchronousRestClient 
     public Promise<Iterable<TestExecution.Test>> getTests(TestExecution testExecution) {
         UriBuilder uriBuilder= UriBuilder.fromUri(baseUri);
         uriBuilder.path("testexec").path("{isssue-key}").path("test");
+        LOGGER.info("TestExec URL: " + uriBuilder);
+        LOGGER.info("TestExec KEY: " + testExecution.getKey());
         return this.getAndParse(uriBuilder.build(testExecution.getKey()),this.testsParser);
     }
 
@@ -369,9 +395,6 @@ public class TestExecutionRestClientImpl extends AbstractAsynchronousRestClient 
      */
     public Promise<Void> setTests(TestExecution testExec) {
         UriBuilder uriBuilder= UriBuilder.fromUri(baseUri);
-        LOGGER.info("\n IN setTests Method");
-        this.updateMongoInfo(new ArrayList<>());
-
         uriBuilder.path("testexec").path("{isssue-key}").path("test");
         return this.postAndParse(uriBuilder.build(testExec.getKey()), testExec, EXEC_UPDATE_GENERATOR, new JsonObjectParser<Void>() {
             public Void parse(JSONObject jsonObject) throws JSONException {
@@ -399,19 +422,19 @@ public class TestExecutionRestClientImpl extends AbstractAsynchronousRestClient 
      * @return A list of test execution promises which runs this test.
      */
     // TODO: MOVE THIS METHOD TO A BOUNDARY
-    public Promise<Iterable<TestExecution>> get(TestExecution.Test test){
-        if(test.getKey()==null){
-            throw new IllegalArgumentException("KEY NOT SET");
-        }
-        Promise<SearchResult> searchResultPromise= searchRestClient.searchJql("issue in testTestExecutions(\""+test.getKey()+"\") ");
-        return searchResultPromise.map(new Function<SearchResult, Iterable<TestExecution>>() {
-            public Iterable<TestExecution> apply(@Nullable SearchResult searchResult) {
-                ArrayList<TestExecution> testExceList=new ArrayList<TestExecution>();
-                for(Issue testExcecIssue : searchResult.getIssues()){
-                    testExceList.add(new TestExecution(testExcecIssue.getSelf(),testExcecIssue.getKey(),testExcecIssue.getId()));
-                }
-                return testExceList;
-            }
-        });
-    }
+//    public Promise<Iterable<TestExecution>> get(TestExecution.Test test){
+//        if(test.getKey()==null){
+//            throw new IllegalArgumentException("KEY NOT SET");
+//        }
+//        Promise<SearchResult> searchResultPromise= searchRestClient.searchJql("issue in testTestExecutions(\""+test.getKey()+"\") ");
+//        return searchResultPromise.map(new Function<SearchResult, Iterable<TestExecution>>() {
+//            public Iterable<TestExecution> apply(@Nullable SearchResult searchResult) {
+//                ArrayList<TestExecution> testExceList=new ArrayList<TestExecution>();
+//                for(Issue testExcecIssue : searchResult.getIssues()){
+//                    testExceList.add(new TestExecution(testExcecIssue.getSelf(),testExcecIssue.getKey(),testExcecIssue.getId()));
+//                }
+//                return testExceList;
+//            }
+//        });
+//    }
 }

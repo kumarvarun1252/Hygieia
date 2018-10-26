@@ -20,7 +20,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConfigurationProperties(prefix = "test_results")
+@ConfigurationProperties(prefix = "feature")
 public class TestResultSettings {
 	private String cron;
 	private int pageSize;

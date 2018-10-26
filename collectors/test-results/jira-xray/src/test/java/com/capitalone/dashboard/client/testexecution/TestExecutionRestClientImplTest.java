@@ -1,65 +1,60 @@
 //package com.capitalone.dashboard.client.testexecution;
 //
 //import com.atlassian.jira.rest.client.internal.async.DisposableHttpClient;
-//import com.atlassian.util.concurrent.Promise;
+//import com.capitalone.dashboard.client.JiraXRayRestClient;
+//import com.capitalone.dashboard.client.JiraXRayRestClientImpl;
+//import com.capitalone.dashboard.client.JiraXRayRestClientSupplier;
+////import com.capitalone.dashboard.client.JiraXRayRestClientFactory;
 //import com.capitalone.dashboard.client.api.domain.TestExecution;
-//import com.capitalone.dashboard.client.api.domain.TestRun;
-//import com.capitalone.dashboard.client.core.json.TestArrayJsonParser;
-//
-//import org.junit.Assert;
+//import com.capitalone.dashboard.repository.FeatureRepository;
+//import com.capitalone.dashboard.repository.TestResultCollectorRepository;
+//import com.capitalone.dashboard.repository.TestResultRepository;
+//import org.junit.After;
 //import org.junit.Before;
 //import org.junit.Test;
-//import org.junit.runner.RunWith;
-//import org.mockito.*;
-//import org.powermock.api.mockito.PowerMockito;
-//import org.powermock.core.classloader.annotations.PrepareForTest;
-//import org.powermock.modules.junit4.PowerMockRunner;
 //
 //import java.net.URI;
 //
-//@RunWith(PowerMockRunner.class)
-//@PrepareForTest(TestExecutionRestClientImpl.class)
+//import static org.junit.Assert.assertNotNull;
+//
 //public class TestExecutionRestClientImplTest {
 //
-//    @Mock
-//    private TestExecution testExecution;
-//    @Mock
-//    private DisposableHttpClient httpClient;
-//    @Mock
-//    private Promise pr;
+//    private final String TEST_EXEC_KEY="EME-4944";
+//    private final String TEST_KEY="EME-1946";
+//    private final long TEST_ID=1977;
 //
+//    private final JiraXRayRestClientSupplier restClientSupplier=new JiraXRayRestClientSupplier();
+//    private JiraXRayRestClientImpl restClient;
+//    private TestExecution testExecution;
+//    DisposableHttpClient httpClient;
+//    TestResultCollectorRepository testResultCollectorRepository;
+//    TestResultRepository testResultRepository;
+//    FeatureRepository featureRepository;
+//    JiraXRayRestClient jiraXRayRestClient;
 //
 //    @Before
-//    public final void init() throws Exception {
-//        MockitoAnnotations.initMocks(this);
-//        TestExecution.Test test =  new TestExecution.Test(URI.create(""),"EA-3403",28775L,1,TestRun.Status.PASS);
-//        PowerMockito.when(pr.claim()).thenReturn(test);
+//    public void setUp() throws Exception {
+//        restClient= (JiraXRayRestClientImpl) restClientSupplier.get();
+//        testExecution=new TestExecution(new URI(""),TEST_EXEC_KEY,1977l);
 //
 //    }
-//    @Test
-//    public void getTests() throws Exception{
-//        testExecution = new TestExecution(URI.create(""), "EME-4644", 1977l);
-//        TestExecutionRestClientImpl mock = PowerMockito.spy(new TestExecutionRestClientImpl(URI.create(""),httpClient));
-//        PowerMockito.doReturn(pr).when(mock,"getAndParse",Matchers.any(URI.class),Matchers.any(TestArrayJsonParser.class));
-//        Promise<Iterable<TestExecution.Test>> testResult= mock.getTests(testExecution);
-//        Assert.assertNotNull(testResult.claim());
+//
+//    @After
+//    public void tearDown() throws Exception {
+//
 //    }
 //
 //    @Test
-//    public void get() throws Exception {
-//        testExecution = new TestExecution(URI.create(""), "EME-4644", 1977l);
-//        TestExecution.Test test =  new TestExecution.Test(URI.create(""),"EA-3403",28775L,1,TestRun.Status.PASS);
-//        try {
-//            TestExecutionRestClientImpl mock = PowerMockito.spy(new TestExecutionRestClientImpl(URI.create(""),httpClient));
-//            Promise<Iterable<TestExecution>> testResult= mock.get(test);
-//            Assert.assertNotNull(testResult);
-//        }catch (Exception e){
+//    public void testGetTests() throws Exception {
+//        restClient=new TestExecutionRestClientImpl(httpClient,testResultCollectorRepository, testResultRepository, featureRepository), jiraXRayRestClient;
+//        Iterable<TestExecution.Test>tests= restClient.getTestExecutionClient().getTests(testExecution).claim();
 //
+//        restClient.getTestExecutionClient().setTests(testExecution);
+//
+//        for(TestExecution.Test t:tests)
+//        {
+//            System.out.print("\n TEST KEY: " + t);
+//            System.out.print("\n TEST Version: " + t.getVersion());
+//            assertNotNull(t);
 //        }
 //    }
-//
-//
-//
-//
-//
-//}

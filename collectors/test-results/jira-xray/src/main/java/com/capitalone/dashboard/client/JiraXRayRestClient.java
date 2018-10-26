@@ -9,11 +9,12 @@ import com.capitalone.dashboard.client.testset.TestSetRestClient;
 /**
  * Interface for Jira XRay Rest Client
  */
-public interface JiraXRayRestClient extends JiraRestClient {
+public interface JiraXRayRestClient {
 
-    TestRestClient getTestClient();
-    TestExecutionRestClient getTestExecutionClient();
-    TestRunRestClient getTestRunClient();
-    TestSetRestClient getTestSetClient();
+//    TestRestClient getTestClient();
+//    TestExecutionRestClient getTestExecutionClient();
+//    TestRunRestClient getTestRunClient();
+//    TestSetRestClient getTestSetClient();
+    int getPageSize();
 
 }

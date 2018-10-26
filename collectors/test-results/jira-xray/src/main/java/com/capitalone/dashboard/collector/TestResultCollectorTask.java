@@ -15,13 +15,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.TaskScheduler;
-//import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Component;
 
 import java.net.URI;
 
 /**
  * Collects {@link TestResultCollector} data from feature content source system.
  */
+@Component
 public class TestResultCollectorTask extends CollectorTask<TestResultCollector> {
     private static final Logger LOGGER = LoggerFactory.getLogger(TestResultCollectorTask.class);
 
@@ -29,7 +30,7 @@ public class TestResultCollectorTask extends CollectorTask<TestResultCollector> 
     private final FeatureRepository featureRepository;
     private final TestResultCollectorRepository testResultCollectorRepository;
     private final TestResultSettings testResultSettings;
-    private final DisposableHttpClient httpClient;
+    DisposableHttpClient httpClient;
 
     CoreFeatureSettings coreFeatureSettings;
     JiraXRayRestClient jiraXRayRestClient;
@@ -46,9 +47,8 @@ public class TestResultCollectorTask extends CollectorTask<TestResultCollector> 
      *            system
      */
     @Autowired
-    public TestResultCollectorTask(CoreFeatureSettings coreFeatureSettings, DisposableHttpClient httpClient, TaskScheduler taskScheduler, TestResultRepository testResultRepository,
-                                   TestResultCollectorRepository testResultCollectorRepository, TestResultSettings testResultSettings,
-                                   JiraXRayRestClient jiraXRayRestClient, FeatureRepository featureRepository) {
+    public TestResultCollectorTask(CoreFeatureSettings coreFeatureSettings, TaskScheduler taskScheduler, TestResultRepository testResultRepository,
+                                   TestResultCollectorRepository testResultCollectorRepository, TestResultSettings testResultSettings, FeatureRepository featureRepository, JiraXRayRestClient jiraXRayRestClient) {
         super(taskScheduler, FeatureCollectorConstants.JIRA);
         this.testResultRepository = testResultRepository;
         this.testResultCollectorRepository = testResultCollectorRepository;
@@ -95,7 +95,7 @@ public class TestResultCollectorTask extends CollectorTask<TestResultCollector> 
 
         try {
             long testExecutionDataStart = System.currentTimeMillis();
-            TestExecutionRestClientImpl testExecutionData = new TestExecutionRestClientImpl(new URI(""), httpClient, this.testResultCollectorRepository, this.testResultRepository, this.featureRepository);
+            TestExecutionRestClientImpl testExecutionData = new TestExecutionRestClientImpl(httpClient, this.testResultCollectorRepository, this.testResultRepository, this.featureRepository, this.jiraXRayRestClient);
             count = testExecutionData.updateTestExecutionInformation();
 
             log("Test Execution Data", testExecutionDataStart, count);
