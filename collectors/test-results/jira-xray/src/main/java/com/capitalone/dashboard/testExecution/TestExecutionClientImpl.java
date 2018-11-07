@@ -1,12 +1,10 @@
 package com.capitalone.dashboard.testExecution;
 
-import com.atlassian.jira.rest.client.internal.async.DisposableHttpClient;
 import com.capitalone.dashboard.TestResultSettings;
 import com.capitalone.dashboard.api.domain.TestExecution;
 import com.capitalone.dashboard.api.domain.TestRun;
 import com.capitalone.dashboard.api.domain.TestStep;
 import com.capitalone.dashboard.core.client.JiraXRayRestClientImpl;
-import com.capitalone.dashboard.core.client.JiraXRayRestClientFactory;
 import com.capitalone.dashboard.core.client.JiraXRayRestClientSupplier;
 import com.capitalone.dashboard.model.*;
 import com.capitalone.dashboard.repository.FeatureRepository;
@@ -27,7 +25,6 @@ public class TestExecutionClientImpl implements TestExecutionClient {
     private final TestResultCollectorRepository testResultCollectorRepository;
     private final FeatureRepository featureRepository;
     private JiraXRayRestClientImpl restClient;
-    private final JiraXRayRestClientFactory factory=new JiraXRayRestClientFactory();
     private final JiraXRayRestClientSupplier restClientSupplier;
 
     public TestExecutionClientImpl(TestResultRepository testResultRepository, TestResultCollectorRepository testResultCollectorRepository, FeatureRepository featureRepository, TestResultSettings testResultSettings, JiraXRayRestClientSupplier restClientSupplier) {
@@ -43,10 +40,6 @@ public class TestExecutionClientImpl implements TestExecutionClient {
         int count = 0;
         int pageSize = testResultSettings.getPageSize();
 
-        LOGGER.info("\n *********** TEST RESULT SETTINGS - PAGE SIZE: " + pageSize);
-
-//        updateStatuses();
-
         boolean hasMore = true;
         for (int i = 0; hasMore; i += pageSize) {
             if (LOGGER.isDebugEnabled()) {
@@ -60,14 +53,11 @@ public class TestExecutionClientImpl implements TestExecutionClient {
 
             if (tests != null && !tests.isEmpty()) {
                 updateMongoInfo(tests);
-                LOGGER.info("***************** NUMBER OF TESTS: " + tests.size());
                 count += tests.size();
             }
 
             LOGGER.info("Loop i " + i + " pageSize " + tests.size());
 
-            // will result in an extra call if number of results == pageSize
-            // but I would rather do that then complicate the jira client implementation
             if (tests == null || tests.size() > pageSize) {
                 hasMore = false;
                 break;
@@ -86,14 +76,6 @@ public class TestExecutionClientImpl implements TestExecutionClient {
      */
     @SuppressWarnings({ "PMD.AvoidDeeplyNestedIfStmts", "PMD.NPathComplexity" })
     private void updateMongoInfo(List<Feature> currentPagedTestExecutions) {
-//        final TestResultSettings testResultSettings = new TestResultSettings();
-        final String uriLocation = testResultSettings.getJiraBaseUrl();
-        final String username = "emb235";
-        final String password = "SecreT1252";
-        DisposableHttpClient httpClient;
-
-        LOGGER.info("\n IN updateMongoInfo Method");
-        LOGGER.info("\n TEST Execution SIZE: " + currentPagedTestExecutions.size());
 
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Size of paged Jira response: " + (currentPagedTestExecutions == null? 0 : currentPagedTestExecutions.size()));
@@ -109,25 +91,16 @@ public class TestExecutionClientImpl implements TestExecutionClient {
 
 //                testResult.setCollectorItemId(jiraXRayFeatureId);
                 testResult.setDescription(testExec.getsName());
-//                LOGGER.info("\n TEST Execution Name: " + testExec.getsName());
-//                LOGGER.info("\n TEST Execution Number: " + testExec.getsNumber());
-//                LOGGER.info("\n TEST Execution ID: " + testExec.getsId());
-
                 testResult.setTargetAppName(testExec.getsProjectName());
                 testResult.setType(TestSuiteType.Manual);
                try {
                     TestExecution testExecution = new TestExecution(new URI(testExec.getsUrl()), testExec.getsNumber(), Long.parseLong(testExec.getsId()));
-                    LOGGER.info("\n TEST Execution KEY: " + testExecution.getKey());
                     testResult.setUrl(testExecution.getSelf().toString());
-//                   restClient= (JiraXRayRestClientImpl) factory.createWithBasicHttpAuthentication(new URI(uriLocation),username,password);
-                   restClient= (JiraXRayRestClientImpl) restClientSupplier.get();
 
+                    restClient= (JiraXRayRestClientImpl) restClientSupplier.get();
                     Iterable<TestExecution.Test> tests = restClient.getTestExecutionClient().getTests(testExecution).claim();
 
                     int totalCount = (int) tests.spliterator().getExactSizeIfKnown();
-                    LOGGER.info("\n TOTAL TESTS: " + totalCount);
-
-
                     int failCount = this.getFailTestCount(testExec, tests);
                     int passCount = this.getPassTestCount(testExec, tests);
                     testResult.setTotalCount(totalCount);
@@ -286,7 +259,6 @@ public class TestExecutionClientImpl implements TestExecutionClient {
                 TestRun testRun = restClient.getTestRunClient().getTestRun(testExec.getsNumber(), test.getKey()).claim();
                 if (testRun.getStatus().toString().equals("FAIL")) {
                     count++;
-                    //System.out.println("*****************Failcount"+count);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -302,11 +274,8 @@ public class TestExecutionClientImpl implements TestExecutionClient {
         for (TestExecution.Test test : tests) {
             try {
                 TestRun testRun = restClient.getTestRunClient().getTestRun(testExec.getsNumber(), test.getKey()).claim();
-               // System.out.println("*****************"+testRun.getStatus());
-
                 if (testRun.getStatus().toString().equals("PASS")) {
                     count++;
-                    //System.out.println("*****************passCount"+count);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -320,7 +289,6 @@ public class TestExecutionClientImpl implements TestExecutionClient {
         int count = 0;
 
         for (TestStep testStep : testRun.getSteps()) {
-            System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%"+testStep.getStatus());
             if ("FAIL".equalsIgnoreCase(statusType) && testStep.getStatus().toString().equals("FAIL")) {
                 count++;
             } else if ("PASS".equalsIgnoreCase(statusType) && testStep.getStatus().toString().equals("PASS")) {

@@ -1,10 +1,6 @@
 package com.capitalone.dashboard.core.client;
 
 import com.atlassian.jira.rest.client.api.JiraRestClient;
-import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClient;
-import com.capitalone.dashboard.repository.FeatureRepository;
-import com.capitalone.dashboard.repository.TestResultCollectorRepository;
-import com.capitalone.dashboard.repository.TestResultRepository;
 import com.capitalone.dashboard.TestResultSettings;
 import com.capitalone.dashboard.util.Supplier;
 import org.apache.commons.codec.binary.Base64;
@@ -53,7 +49,7 @@ public class JiraXRayRestClientSupplier implements Supplier<JiraRestClient> {
             } else {
                 jiraUri = new URI(jiraBaseUrl);
             }
-            
+
             InetAddress.getByName(jiraUri.getHost());
             client = new JiraXRayRestClientFactory()
                     .createWithBasicHttpAuthentication(jiraUri,
