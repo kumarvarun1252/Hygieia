@@ -1,6 +1,6 @@
 //package com.capitalone.dashboard.client.testrun;
 //
-//import com.atlassian.jira.rest.client.internal.async.DisposableHttpClient;
+//import com.atlassian.jira.rest.client.internal.client.DisposableHttpClient;
 //import com.atlassian.util.concurrent.Promise;
 //import com.capitalone.dashboard.client.api.domain.TestRun;
 //import com.capitalone.dashboard.client.core.json.TestArrayJsonParser;

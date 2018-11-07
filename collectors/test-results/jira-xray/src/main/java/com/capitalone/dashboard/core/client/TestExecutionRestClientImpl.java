@@ -1,4 +1,4 @@
-package com.capitalone.dashboard.core.async;
+package com.capitalone.dashboard.core.client;
 
 import com.atlassian.httpclient.api.HttpClient;
 import com.atlassian.jira.rest.client.api.SearchRestClient;
@@ -23,7 +23,7 @@ import java.util.ArrayList;
 /**
  * Created by lucho on 25/08/16.
  */
-public abstract class AsyncTestExecRestClient extends AbstractAsynchronousRestClient implements TestExecutionRestClient {
+public abstract class TestExecutionRestClientImpl extends AbstractAsynchronousRestClient implements TestExecutionRestClient {
     private URI baseUri;
     private final TestArrayJsonParser testsParser=new TestArrayJsonParser();
     private final static TestExecUpdateJsonGenerator execUpdateGenerator=new TestExecUpdateJsonGenerator();
@@ -33,11 +33,11 @@ public abstract class AsyncTestExecRestClient extends AbstractAsynchronousRestCl
 
 
 
-    protected AsyncTestExecRestClient(HttpClient client) {
+    protected TestExecutionRestClientImpl(HttpClient client) {
         super(client);
     }
 
-    public AsyncTestExecRestClient(URI serverUri, DisposableHttpClient httpClient){
+    public TestExecutionRestClientImpl(URI serverUri, DisposableHttpClient httpClient){
         super(httpClient);
         baseUri = UriBuilder.fromUri(serverUri).path("/rest/raven/{restVersion}/api/").build(PluginConstants.XRAY_REST_VERSION);
         searchRestClient=new AsynchronousSearchRestClient(UriBuilder.fromUri(serverUri).path("rest/api/latest/").build(new Object[0]),httpClient);

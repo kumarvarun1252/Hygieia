@@ -2,12 +2,12 @@ package com.capitalone.dashboard.testExecution;
 
 import com.atlassian.jira.rest.client.internal.async.DisposableHttpClient;
 import com.capitalone.dashboard.TestResultSettings;
-import com.capitalone.dashboard.api.domain.Example;
 import com.capitalone.dashboard.api.domain.TestExecution;
 import com.capitalone.dashboard.api.domain.TestRun;
 import com.capitalone.dashboard.api.domain.TestStep;
-import com.capitalone.dashboard.core.async.AsyncXrayJiraRestClient;
-import com.capitalone.dashboard.core.async.XrayRestAsyncRestClientFactory;
+import com.capitalone.dashboard.core.client.JiraXRayRestClientImpl;
+import com.capitalone.dashboard.core.client.JiraXRayRestClientFactory;
+import com.capitalone.dashboard.core.client.JiraXRayRestClientSupplier;
 import com.capitalone.dashboard.model.*;
 import com.capitalone.dashboard.repository.FeatureRepository;
 import com.capitalone.dashboard.repository.TestResultCollectorRepository;
@@ -19,30 +19,31 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 public class TestExecutionClientImpl implements TestExecutionClient {
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(TestExecutionClientImpl.class);
-    private final TestResultSettings testResultSettings = new TestResultSettings();
+    private final TestResultSettings testResultSettings;
     private final TestResultRepository testResultRepository;
     private final TestResultCollectorRepository testResultCollectorRepository;
     private final FeatureRepository featureRepository;
-    private AsyncXrayJiraRestClient restClient;
-    private final XrayRestAsyncRestClientFactory factory=new XrayRestAsyncRestClientFactory();
-    private final String uriLocation="https://jira.kdc.capitalone.com";
-    private final String username="CWC338";
-    private final String password= "";
+    private JiraXRayRestClientImpl restClient;
+    private final JiraXRayRestClientFactory factory=new JiraXRayRestClientFactory();
+    private final JiraXRayRestClientSupplier restClientSupplier;
 
-    public TestExecutionClientImpl(TestResultRepository testResultRepository, TestResultCollectorRepository testResultCollectorRepository, FeatureRepository featureRepository) {
+    public TestExecutionClientImpl(TestResultRepository testResultRepository, TestResultCollectorRepository testResultCollectorRepository, FeatureRepository featureRepository, TestResultSettings testResultSettings, JiraXRayRestClientSupplier restClientSupplier) {
         this.testResultRepository = testResultRepository;
         this.testResultCollectorRepository = testResultCollectorRepository;
         this.featureRepository = featureRepository;
+        this.testResultSettings = testResultSettings;
+        this.restClientSupplier = restClientSupplier;
     }
 
 
     public int updateTestResultInformation() {
         int count = 0;
         int pageSize = testResultSettings.getPageSize();
+
+        LOGGER.info("\n *********** TEST RESULT SETTINGS - PAGE SIZE: " + pageSize);
 
 //        updateStatuses();
 
@@ -86,6 +87,9 @@ public class TestExecutionClientImpl implements TestExecutionClient {
     @SuppressWarnings({ "PMD.AvoidDeeplyNestedIfStmts", "PMD.NPathComplexity" })
     private void updateMongoInfo(List<Feature> currentPagedTestExecutions) {
 //        final TestResultSettings testResultSettings = new TestResultSettings();
+        final String uriLocation = testResultSettings.getJiraBaseUrl();
+        final String username = "emb235";
+        final String password = "SecreT1252";
         DisposableHttpClient httpClient;
 
         LOGGER.info("\n IN updateMongoInfo Method");
@@ -105,9 +109,9 @@ public class TestExecutionClientImpl implements TestExecutionClient {
 
 //                testResult.setCollectorItemId(jiraXRayFeatureId);
                 testResult.setDescription(testExec.getsName());
-                LOGGER.info("\n TEST Execution Name: " + testExec.getsName());
-                LOGGER.info("\n TEST Execution Number: " + testExec.getsNumber());
-                LOGGER.info("\n TEST Execution ID: " + testExec.getsId());
+//                LOGGER.info("\n TEST Execution Name: " + testExec.getsName());
+//                LOGGER.info("\n TEST Execution Number: " + testExec.getsNumber());
+//                LOGGER.info("\n TEST Execution ID: " + testExec.getsId());
 
                 testResult.setTargetAppName(testExec.getsProjectName());
                 testResult.setType(TestSuiteType.Manual);
@@ -115,7 +119,8 @@ public class TestExecutionClientImpl implements TestExecutionClient {
                     TestExecution testExecution = new TestExecution(new URI(testExec.getsUrl()), testExec.getsNumber(), Long.parseLong(testExec.getsId()));
                     LOGGER.info("\n TEST Execution KEY: " + testExecution.getKey());
                     testResult.setUrl(testExecution.getSelf().toString());
-                   restClient= (AsyncXrayJiraRestClient) factory.createWithBasicHttpAuthentication(new URI(uriLocation),username,password);
+//                   restClient= (JiraXRayRestClientImpl) factory.createWithBasicHttpAuthentication(new URI(uriLocation),username,password);
+                   restClient= (JiraXRayRestClientImpl) restClientSupplier.get();
 
                     Iterable<TestExecution.Test> tests = restClient.getTestExecutionClient().getTests(testExecution).claim();
 

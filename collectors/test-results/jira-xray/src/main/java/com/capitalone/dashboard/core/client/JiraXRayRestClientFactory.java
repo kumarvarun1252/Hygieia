@@ -1,4 +1,4 @@
-package com.capitalone.dashboard.core.async;
+package com.capitalone.dashboard.core.client;
 
 import com.atlassian.httpclient.api.HttpClient;
 import com.atlassian.jira.rest.client.api.AuthenticationHandler;
@@ -13,13 +13,13 @@ import java.net.URI;
 /**
  * Created by lucho on 16/08/16.
  */
-public class XrayRestAsyncRestClientFactory extends AsynchronousJiraRestClientFactory {
+public class JiraXRayRestClientFactory extends AsynchronousJiraRestClientFactory {
 
 
     public JiraRestClient create(URI serverUri, AuthenticationHandler authenticationHandler) {
         DisposableHttpClient httpClient = (new AsynchronousHttpClientFactory()).createClient(serverUri, authenticationHandler);
 
-        return new AsyncXrayJiraRestClient(serverUri, httpClient);
+        return new JiraXRayRestClientImpl(serverUri, httpClient);
     }
 
     public JiraRestClient createWithBasicHttpAuthentication(URI serverUri, String username, String password) {
@@ -28,7 +28,7 @@ public class XrayRestAsyncRestClientFactory extends AsynchronousJiraRestClientFa
 
     public JiraRestClient create(URI serverUri, HttpClient httpClient) {
         DisposableHttpClient disposableHttpClient = (new AsynchronousHttpClientFactory()).createClient(httpClient);
-        return new AsyncXrayJiraRestClient(serverUri, disposableHttpClient);
+        return new JiraXRayRestClientImpl(serverUri, disposableHttpClient);
     }
 
 

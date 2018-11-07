@@ -1,5 +1,5 @@
 
-package com.capitalone.dashboard.core.async;
+package com.capitalone.dashboard.core.client;
 
 import com.atlassian.httpclient.api.HttpClient;
 import com.atlassian.jira.rest.client.api.SearchRestClient;
@@ -12,7 +12,6 @@ import com.atlassian.jira.rest.client.internal.json.JsonObjectParser;
 import com.atlassian.jira.rest.client.internal.json.StatusJsonParser;
 import com.atlassian.util.concurrent.Promise;
 import com.capitalone.dashboard.api.TestRunRestClient;
-import com.capitalone.dashboard.api.domain.Comment;
 import com.capitalone.dashboard.api.domain.TestRun;
 import com.capitalone.dashboard.core.PluginConstants;
 import com.capitalone.dashboard.core.json.TestRunJsonParser;
@@ -32,18 +31,18 @@ import java.util.ArrayList;
  * Created by lucho on 11/08/16.
  */
 
-public class AsyncTestRunRestClient extends AbstractAsynchronousRestClient implements TestRunRestClient {
+public class TestRunRestClientImpl extends AbstractAsynchronousRestClient implements TestRunRestClient {
     private URI baseUri;
     private final TestRunJsonParser testRunParser=new TestRunJsonParser();
     private final TestRunUpdateJsonGenerator testRunUpdateJsonGenerator=new TestRunUpdateJsonGenerator();
     private final StatusJsonParser statusParser=new StatusJsonParser();
     private SearchRestClient searchRestClient=null;
 
-    protected AsyncTestRunRestClient(HttpClient client) {
+    protected TestRunRestClientImpl(HttpClient client) {
         super(client);
     }
 
-    public AsyncTestRunRestClient(URI serverUri, DisposableHttpClient httpClient){
+    public TestRunRestClientImpl(URI serverUri, DisposableHttpClient httpClient){
         super(httpClient);
         searchRestClient=new AsynchronousSearchRestClient(UriBuilder.fromUri(serverUri).path("rest/api/latest/").build(new Object[0]),httpClient);
         baseUri = UriBuilder.fromUri(serverUri).path("/rest/raven/{restVersion}/api/").build(PluginConstants.XRAY_REST_VERSION);
