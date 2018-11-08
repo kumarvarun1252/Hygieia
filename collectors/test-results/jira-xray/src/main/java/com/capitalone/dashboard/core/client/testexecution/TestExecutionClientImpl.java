@@ -1,4 +1,4 @@
-package com.capitalone.dashboard.testExecution;
+package com.capitalone.dashboard.core.client.testexecution;
 
 import com.capitalone.dashboard.TestResultSettings;
 import com.capitalone.dashboard.api.domain.TestExecution;
@@ -180,8 +180,6 @@ public class TestExecutionClientImpl implements TestExecutionClient {
         } else {
             testSuite.setStatus(TestCaseStatus.Skipped);
         }
-        List<TestCase> testCases = new ArrayList<>();
-        TestCase testCase = new TestCase();
 
         testSuite.setTestCases(this.getTestCases(tests,testExec));
         testSuites.add(testSuite);
@@ -196,7 +194,6 @@ public class TestExecutionClientImpl implements TestExecutionClient {
             TestCase testCase = new TestCase();
 
             try {
-               // TestRun testRun = new TestRun(new URI(""), test.getKey(), test.getId());
                 TestRun testRun = restClient.getTestRunClient().getTestRun(testExec.getsNumber(), test.getKey()).claim();
 
                 testCase.setId(testRun.getId().toString());
@@ -220,7 +217,7 @@ public class TestExecutionClientImpl implements TestExecutionClient {
                 testCase.setTestSteps(this.getTestSteps(testRun));
 
             } catch (Exception e) {
-
+                LOGGER.error("Unable to get the Test Run: " + e);
             }
             testCases.add(testCase);
         }
@@ -246,8 +243,6 @@ public class TestExecutionClientImpl implements TestExecutionClient {
             testSteps.add(testCaseStep);
         }
 
-
-
         return testSteps;
     }
 
@@ -261,7 +256,7 @@ public class TestExecutionClientImpl implements TestExecutionClient {
                     count++;
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                LOGGER.error("Unable to get Test Run: " + e);
             }
         }
 
@@ -278,7 +273,7 @@ public class TestExecutionClientImpl implements TestExecutionClient {
                     count++;
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                LOGGER.error("Unable to get Test Run: " + e);
             }
         }
 

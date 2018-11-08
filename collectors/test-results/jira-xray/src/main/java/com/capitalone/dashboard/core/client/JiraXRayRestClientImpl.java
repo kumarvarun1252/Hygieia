@@ -3,12 +3,16 @@ package com.capitalone.dashboard.core.client;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClient;
 import com.atlassian.jira.rest.client.internal.async.DisposableHttpClient;
 import com.atlassian.util.concurrent.Promise;
-import com.capitalone.dashboard.api.*;
+import com.capitalone.dashboard.api.TestExecutionRestClient;
+import com.capitalone.dashboard.api.TestRestClient;
+import com.capitalone.dashboard.api.TestRunRestClient;
+import com.capitalone.dashboard.api.TestSetRestClient;
+import com.capitalone.dashboard.api.JiraXRayRestClient;
 import com.capitalone.dashboard.api.domain.TestExecution;
 import java.net.URI;
 
 /**
- * Created by lucho on 11/08/16.
+ * This is the implementation class for JiraXRayRestClient
  */
 public class JiraXRayRestClientImpl extends AsynchronousJiraRestClient implements JiraXRayRestClient {
     private TestRestClient testClient=null;

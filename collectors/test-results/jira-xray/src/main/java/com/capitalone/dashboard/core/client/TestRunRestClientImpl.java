@@ -9,13 +9,11 @@ import com.atlassian.jira.rest.client.internal.async.AbstractAsynchronousRestCli
 import com.atlassian.jira.rest.client.internal.async.AsynchronousSearchRestClient;
 import com.atlassian.jira.rest.client.internal.async.DisposableHttpClient;
 import com.atlassian.jira.rest.client.internal.json.JsonObjectParser;
-import com.atlassian.jira.rest.client.internal.json.StatusJsonParser;
 import com.atlassian.util.concurrent.Promise;
 import com.capitalone.dashboard.api.TestRunRestClient;
 import com.capitalone.dashboard.api.domain.TestRun;
 import com.capitalone.dashboard.core.PluginConstants;
 import com.capitalone.dashboard.core.json.TestRunJsonParser;
-import com.capitalone.dashboard.core.json.gen.TestRunJsonGenerator;
 import com.capitalone.dashboard.core.json.gen.TestRunUpdateJsonGenerator;
 import com.google.common.base.Function;
 import org.codehaus.jettison.json.JSONException;
@@ -28,14 +26,13 @@ import java.util.ArrayList;
 
 
 /**
- * Created by lucho on 11/08/16.
+ * This is the implementation class for TestRunRestClient
  */
 
 public class TestRunRestClientImpl extends AbstractAsynchronousRestClient implements TestRunRestClient {
     private URI baseUri;
     private final TestRunJsonParser testRunParser=new TestRunJsonParser();
     private final TestRunUpdateJsonGenerator testRunUpdateJsonGenerator=new TestRunUpdateJsonGenerator();
-    private final StatusJsonParser statusParser=new StatusJsonParser();
     private SearchRestClient searchRestClient=null;
 
     protected TestRunRestClientImpl(HttpClient client) {
@@ -84,16 +81,9 @@ public class TestRunRestClientImpl extends AbstractAsynchronousRestClient implem
     public Promise<Void> updateTestRun(TestRun testRunInput) {
         UriBuilder uriBuilder=UriBuilder.fromUri(baseUri);
         uriBuilder.path("testrun").path("{id}");
-        System.out.println(uriBuilder.build(testRunInput.getId()));
-        TestRunJsonGenerator jsonGenerator=new TestRunJsonGenerator();
-        try {
-            System.out.println(testRunUpdateJsonGenerator.generate(testRunInput));
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+
         return this.putAndParse(uriBuilder.build(testRunInput.getId()), testRunInput,testRunUpdateJsonGenerator, new JsonObjectParser<Void>() {
             public Void parse(JSONObject jsonObject) throws JSONException {
-                System.out.println("CALLING PARSE ON UPDATE");
                 return null;
             }
         });

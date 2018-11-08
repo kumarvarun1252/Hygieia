@@ -5,9 +5,9 @@ package com.capitalone.dashboard.core.json.util;
  */
 public interface RendereableItem {
 
-    public String getRendered();
-    public void setRendered(String rendered);
+    String getRendered();
+    void setRendered(String rendered);
 
-    public String getRaw();
-    public void setRaw(String raw);
+    String getRaw();
+    void setRaw(String raw);
 }

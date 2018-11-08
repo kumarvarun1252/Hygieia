@@ -11,7 +11,7 @@ import com.atlassian.jira.rest.client.internal.async.DisposableHttpClient;
 import java.net.URI;
 
 /**
- * Created by lucho on 16/08/16.
+ * This class has the factory methods for making connections to jira server
  */
 public class JiraXRayRestClientFactory extends AsynchronousJiraRestClientFactory {
 

@@ -12,7 +12,6 @@ import com.capitalone.dashboard.api.TestExecutionRestClient;
 import com.capitalone.dashboard.api.domain.TestExecution;
 import com.capitalone.dashboard.core.PluginConstants;
 import com.capitalone.dashboard.core.json.TestArrayJsonParser;
-import com.capitalone.dashboard.core.json.gen.TestExecUpdateJsonGenerator;
 import com.google.common.base.Function;
 
 import javax.annotation.Nullable;
@@ -21,17 +20,12 @@ import java.net.URI;
 import java.util.ArrayList;
 
 /**
- * Created by lucho on 25/08/16.
+ * This is the implementation class for TestExecutionRestClient
  */
 public abstract class TestExecutionRestClientImpl extends AbstractAsynchronousRestClient implements TestExecutionRestClient {
     private URI baseUri;
     private final TestArrayJsonParser testsParser=new TestArrayJsonParser();
-    private final static TestExecUpdateJsonGenerator execUpdateGenerator=new TestExecUpdateJsonGenerator();
-
-
     private SearchRestClient searchRestClient=null;
-
-
 
     protected TestExecutionRestClientImpl(HttpClient client) {
         super(client);

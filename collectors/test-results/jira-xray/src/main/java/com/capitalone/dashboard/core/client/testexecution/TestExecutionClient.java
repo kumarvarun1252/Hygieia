@@ -1,4 +1,4 @@
-package com.capitalone.dashboard.testExecution;
+package com.capitalone.dashboard.core.client.testexecution;
 
 public interface TestExecutionClient {
     int updateTestResultInformation();

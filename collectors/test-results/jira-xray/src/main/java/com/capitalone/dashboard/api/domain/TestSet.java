@@ -14,8 +14,6 @@ public class TestSet extends VersionableIssue<TestSet> {
     @Override
     public TestSet cloneTest() throws CloneNotSupportedException {
         //TODO: Implement TestSet later on
-        // TestSet myTestSet=new TestSet(getSelf(),getKey(),getId());
-
         return null;
     }
 }

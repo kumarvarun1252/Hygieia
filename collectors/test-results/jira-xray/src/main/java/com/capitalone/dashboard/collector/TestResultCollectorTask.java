@@ -8,7 +8,7 @@ import com.capitalone.dashboard.repository.BaseCollectorRepository;
 import com.capitalone.dashboard.repository.FeatureRepository;
 import com.capitalone.dashboard.repository.TestResultCollectorRepository;
 import com.capitalone.dashboard.repository.TestResultRepository;
-import com.capitalone.dashboard.testExecution.TestExecutionClientImpl;
+import com.capitalone.dashboard.core.client.testexecution.TestExecutionClientImpl;
 import com.capitalone.dashboard.util.CoreFeatureSettings;
 import com.capitalone.dashboard.util.FeatureCollectorConstants;
 import org.slf4j.Logger;

@@ -29,9 +29,7 @@ public class TestRun extends BasicIssue implements Versionable<TestRun> {
     private Iterable<TestStep> steps;
     private Iterable<Example> examples;
 
-    //TODO: Need to be implemented
-    // private String scenario;
-    // private String scenarioOutline;
+    //TODO: Need to be implemented scenario & scenarioOutline
 
     private String testExecKey;
 
