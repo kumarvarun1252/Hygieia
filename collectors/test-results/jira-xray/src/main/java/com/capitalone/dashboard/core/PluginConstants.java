@@ -1,7 +1,7 @@
 package com.capitalone.dashboard.core;
 
 /**
- * Created by lucho on 11/08/16.
+ * This class is for Jira XRay Plugin Constants
  */
 public class PluginConstants {
     public static final String XRAY_VERSION="1.12.2";

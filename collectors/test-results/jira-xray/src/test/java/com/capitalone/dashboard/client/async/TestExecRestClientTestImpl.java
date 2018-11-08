@@ -11,9 +11,6 @@
 //
 //import static org.junit.Assert.assertNotNull;
 //
-///**
-// * Created by lucho on 26/08/16.
-// */
 //public class TestExecRestClientTestImpl {
 //
 //    private final String uriLocation="https://jira.kdc.capitalone.com";

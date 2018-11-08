@@ -21,10 +21,6 @@ import java.util.Date;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-*
- * Created by lucho on 17/08/16.
-
-
 public class AsyncTestRunRestClientTest {
     private final XrayRestAsyncRestClientFactory factory=new XrayRestAsyncRestClientFactory();
     private AsyncXrayJiraRestClient restClient;
