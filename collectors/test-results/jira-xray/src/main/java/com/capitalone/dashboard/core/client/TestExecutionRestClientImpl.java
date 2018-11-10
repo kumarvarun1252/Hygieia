@@ -34,7 +34,7 @@ public abstract class TestExecutionRestClientImpl extends AbstractAsynchronousRe
     public TestExecutionRestClientImpl(URI serverUri, DisposableHttpClient httpClient){
         super(httpClient);
         baseUri = UriBuilder.fromUri(serverUri).path("/rest/raven/{restVersion}/api/").build(PluginConstants.XRAY_REST_VERSION);
-        searchRestClient=new AsynchronousSearchRestClient(UriBuilder.fromUri(serverUri).path("rest/api/latest/").build(new Object[0]),httpClient);
+        searchRestClient=new AsynchronousSearchRestClient(UriBuilder.fromUri(serverUri).path("rest/api/latest/").build(),httpClient);
     }
 
     public Promise<Iterable<TestExecution.Test>> getTests(TestExecution testExecution) {

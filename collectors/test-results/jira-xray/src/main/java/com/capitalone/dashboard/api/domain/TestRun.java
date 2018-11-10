@@ -29,7 +29,7 @@ public class TestRun extends BasicIssue implements Versionable<TestRun> {
     private Iterable<TestStep> steps;
     private Iterable<Example> examples;
 
-    //TODO: Need to be implemented scenario & scenarioOutline
+    //TODO: Need to be implemented scenario &
 
     private String testExecKey;
 
@@ -217,7 +217,7 @@ public class TestRun extends BasicIssue implements Versionable<TestRun> {
     }
 
 
-    public enum Status{TODO,EXECUTING,ABORTED,FAIL,PASS};
+    public enum Status{TODO,EXECUTING,ABORTED,FAIL,PASS}
 
 
 }

@@ -23,7 +23,7 @@ public class JiraXRayRestClientFactory extends AsynchronousJiraRestClientFactory
     }
 
     public JiraRestClient createWithBasicHttpAuthentication(URI serverUri, String username, String password) {
-        return this.create(serverUri, (AuthenticationHandler)(new BasicHttpAuthenticationHandler(username, password)));
+        return this.create(serverUri, new BasicHttpAuthenticationHandler(username, password));
     }
 
     public JiraRestClient create(URI serverUri, HttpClient httpClient) {

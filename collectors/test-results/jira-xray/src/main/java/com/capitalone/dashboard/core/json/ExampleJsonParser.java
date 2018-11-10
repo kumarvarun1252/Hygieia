@@ -36,7 +36,7 @@ public class ExampleJsonParser implements JsonObjectParser<Example> {
         JSONArray jsonValues=jsonObject.getJSONArray(KEY_VALUES);
         ArrayList<Object> values=new ArrayList<Object>();
         for (int i = 0; i < jsonValues.length(); i++){
-                values.add((Object)jsonValues.getString(i));
+                values.add(jsonValues.getString(i));
         }
    return values;
     }

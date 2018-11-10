@@ -82,4 +82,4 @@ public class Evidence {
     public void setData(ByteBuffer data) {
         this.data = data;
     }
-};
+}

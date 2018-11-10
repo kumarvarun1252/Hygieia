@@ -2,20 +2,13 @@ package com.capitalone.dashboard.api.domain;
 
 import com.atlassian.jira.rest.client.api.domain.BasicIssue;
 import com.capitalone.dashboard.core.json.util.RendereableItem;
-import com.capitalone.dashboard.core.json.util.RendereableItemImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
 
 /**
  * This class will get the details from a Test Step
  */
 public class TestStep extends BasicIssue implements Versionable<TestStep> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(TestStep.class);
 
     private int version = 0;
     private TestStep oldVersion = null;
@@ -126,69 +119,12 @@ public class TestStep extends BasicIssue implements Versionable<TestStep> {
         return defects;
     }
 
-    public void setDefects(Iterable<Defect> defects) {
-        try {
-            this.setOldVersion(this.cloneTestStep());
-        } catch (CloneNotSupportedException e) {
-            LOGGER.error("Clone is not supported for the TestRun: " + e);
-        }
-        this.defects = defects;
-    }
-
     public enum Status {TODO, EXECUTING, ABORTED, FAIL, PASS}
-
-    ;
 
     public Status getStatus() {
         return status;
     }
 
-    public void setStatus(Status status) {
-        try {
-            this.setOldVersion(this.cloneTestStep());
-        } catch (CloneNotSupportedException e) {
-            LOGGER.error("Clone is not supported for the TestRun: " + e);
-        }
-        this.status = status;
-    }
-
-    @SuppressWarnings("PMD.NPathComplexity")
-    public TestStep cloneTestStep() throws CloneNotSupportedException {
-        TestStep myTestStep = new TestStep(super.getSelf(), super.getKey(), super.getId());
-        if (this.step != null)
-            myTestStep.setStep(new RendereableItemImpl(this.step.getRaw(), this.step.getRendered()));
-        if (this.data != null)
-            myTestStep.setData(new RendereableItemImpl(this.data.getRaw(), this.data.getRendered()));
-        if (this.result != null)
-            myTestStep.setResult(new RendereableItemImpl(this.result.getRaw(), this.result.getRendered()));
-        if (this.comment != null)
-            myTestStep.setComment(new Comment(this.comment.getRaw(), this.comment.getRendered()));
-        if (this.status != null)
-            myTestStep.setStatus(this.status);
-
-        if (this.attachments != null) {
-            Collection<Evidence> attachments = new ArrayList<Evidence>();
-            for (Evidence e : this.getAttachments()) {
-                attachments.add(new Evidence(e.getId().longValue(), e.getFileName(), e.getFileSize(), (Date) e.getCreated().clone(), e.getAuthor(), e.getFileURL()));
-            }
-            myTestStep.setAttachments(attachments);
-        }
-        if (this.evidences != null) {
-            Collection<Evidence> evidences = new ArrayList<Evidence>();
-            for (Evidence e : this.getEvidences()) {
-                evidences.add(new Evidence(e.getId().longValue(), e.getFileName(), e.getFileSize(), (Date) e.getCreated().clone(), e.getAuthor(), e.getFileURL()));
-            }
-            myTestStep.setEvidences(evidences);
-        }
-        if (this.defects != null) {
-            Collection<Defect> defects = new ArrayList<Defect>();
-            for (Defect d : this.getDefects()) {
-                defects.add(new Defect(d.getSelf(), d.getKey(), d.getId(), d.getSummary(), d.getStatus()));
-            }
-            myTestStep.setDefects(defects);
-        }
-        return myTestStep;
-    }
 }
 
 

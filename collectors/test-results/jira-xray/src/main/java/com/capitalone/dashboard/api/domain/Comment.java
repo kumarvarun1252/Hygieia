@@ -37,4 +37,4 @@ public class Comment implements RendereableItem {
     public Comment cloneComment(){
         return new Comment(this.raw,this.rendered);
     }
-};
+}

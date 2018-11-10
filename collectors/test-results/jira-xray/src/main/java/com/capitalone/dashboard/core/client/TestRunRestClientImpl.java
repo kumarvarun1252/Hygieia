@@ -41,7 +41,7 @@ public class TestRunRestClientImpl extends AbstractAsynchronousRestClient implem
 
     public TestRunRestClientImpl(URI serverUri, DisposableHttpClient httpClient){
         super(httpClient);
-        searchRestClient=new AsynchronousSearchRestClient(UriBuilder.fromUri(serverUri).path("rest/api/latest/").build(new Object[0]),httpClient);
+        searchRestClient=new AsynchronousSearchRestClient(UriBuilder.fromUri(serverUri).path("rest/api/latest/").build(),httpClient);
         baseUri = UriBuilder.fromUri(serverUri).path("/rest/raven/{restVersion}/api/").build(PluginConstants.XRAY_REST_VERSION);
     }
 
@@ -56,7 +56,7 @@ public class TestRunRestClientImpl extends AbstractAsynchronousRestClient implem
     public Promise<TestRun> getTestRun(String testExecKey, String testKey) {
         UriBuilder uriBuilder=UriBuilder.fromUri(baseUri);
         uriBuilder.path("testrun").queryParam("testExecIssueKey",testExecKey).queryParam("testIssueKey",testKey);
-        return this.getAndParse(uriBuilder.build(new Object[0]),this.testRunParser);
+        return this.getAndParse(uriBuilder.build(),this.testRunParser);
     }
 
 /**

@@ -7,10 +7,12 @@ import com.capitalone.dashboard.api.domain.TestStep;
 import com.capitalone.dashboard.core.client.JiraXRayRestClientImpl;
 import com.capitalone.dashboard.core.client.JiraXRayRestClientSupplier;
 import com.capitalone.dashboard.model.*;
+import com.capitalone.dashboard.repository.CollectorItemRepository;
 import com.capitalone.dashboard.repository.FeatureRepository;
 import com.capitalone.dashboard.repository.TestResultCollectorRepository;
 import com.capitalone.dashboard.repository.TestResultRepository;
 import com.capitalone.dashboard.util.FeatureCollectorConstants;
+import org.bson.types.ObjectId;
 import org.slf4j.LoggerFactory;
 
 import java.net.URI;
@@ -26,16 +28,19 @@ public class TestExecutionClientImpl implements TestExecutionClient {
     private final TestResultRepository testResultRepository;
     private final TestResultCollectorRepository testResultCollectorRepository;
     private final FeatureRepository featureRepository;
+    private final CollectorItemRepository collectorItemRepository;
     private JiraXRayRestClientImpl restClient;
     private final JiraXRayRestClientSupplier restClientSupplier;
 
     public TestExecutionClientImpl(TestResultRepository testResultRepository, TestResultCollectorRepository testResultCollectorRepository,
-                                   FeatureRepository featureRepository, TestResultSettings testResultSettings, JiraXRayRestClientSupplier restClientSupplier) {
+                                   FeatureRepository featureRepository, CollectorItemRepository collectorItemRepository,
+                                   TestResultSettings testResultSettings, JiraXRayRestClientSupplier restClientSupplier) {
         this.testResultRepository = testResultRepository;
         this.testResultCollectorRepository = testResultCollectorRepository;
         this.featureRepository = featureRepository;
         this.testResultSettings = testResultSettings;
         this.restClientSupplier = restClientSupplier;
+        this.collectorItemRepository = collectorItemRepository;
     }
 
 
@@ -61,14 +66,9 @@ public class TestExecutionClientImpl implements TestExecutionClient {
 
             LOGGER.info("Loop i " + i + " pageSize " + testExecutions.size());
 
-            LOGGER.info("Test Execution SIZE: " + testExecutions.size());
-            LOGGER.info("Page Size: " + pageSize);
-
-
             // will result in an extra call if number of results == pageSize
             // but I would rather do that then complicate the jira client implementation
             if (testExecutions == null || testExecutions.size() < pageSize) {
-                LOGGER.info("INSIDE IF");
                 hasMore = false;
                 break;
             }
@@ -86,20 +86,28 @@ public class TestExecutionClientImpl implements TestExecutionClient {
      */
     @SuppressWarnings({ "PMD.AvoidDeeplyNestedIfStmts", "PMD.NPathComplexity" })
     private void updateMongoInfo(List<Feature> currentPagedTestExecutions) {
-
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Size of paged Jira response: " + (currentPagedTestExecutions == null? 0 : currentPagedTestExecutions.size()));
         }
 
         if (currentPagedTestExecutions != null) {
             List<TestResult> testResultsToSave = new ArrayList<>();
+            ObjectId collectorItemId;
 //            ObjectId jiraXRayFeatureId = testResultCollectorRepository.findByName(FeatureCollectorConstants.JIRA_XRAY).getId();
 
             for (Feature testExec : currentPagedTestExecutions) {
 
+                // Set collectoritemid
+                if (testExec.getsTeamID() != null) {
+                    collectorItemId = this.collectorItemRepository.findByJiraProjectIdAndTeamId(testExec.getsProjectID(), testExec.getsTeamID()).getId();
+                } else {
+                    collectorItemId = this.collectorItemRepository.findByJiraProjectId(testExec.getsProjectID()).getId();
+
+                }
+
                 TestResult testResult = new TestResult();
 
-//                testResult.setCollectorItemId(jiraXRayFeatureId);
+                testResult.setCollectorItemId(collectorItemId);
                 testResult.setDescription(testExec.getsName());
 
                 testResult.setTargetAppName(testExec.getsProjectName());
@@ -177,7 +185,6 @@ public class TestExecutionClientImpl implements TestExecutionClient {
             TestCase testCase = new TestCase();
 
             try {
-                // TestRun testRun = new TestRun(new URI(""), test.getKey(), test.getId());
                 TestRun testRun = restClient.getTestRunClient().getTestRun(testExec.getsNumber(), test.getKey()).claim();
 
                 testCase.setId(testRun.getId().toString());
@@ -207,7 +214,7 @@ public class TestExecutionClientImpl implements TestExecutionClient {
                 testCase.setTestSteps(this.getTestSteps(testRun));
 
             } catch (Exception e) {
-
+                LOGGER.error("Unable to get the Test Run: " + e);
             }
             testCases.add(testCase);
         }
@@ -273,7 +280,7 @@ public class TestExecutionClientImpl implements TestExecutionClient {
     private Map<String,Integer> getStepCountStatusMap(TestRun testRun) {
         Map<String,Integer> map = new HashMap<>(4);
         int failStepCount = 0, passStepCount = 0, skipStepCount = 0, unknownStepCount = 0;
-        long start = System.currentTimeMillis();
+//        long start = System.currentTimeMillis();
         for (TestStep testStep : testRun.getSteps()) {
 
             if (testStep.getStatus().toString().equals("PASS")) {

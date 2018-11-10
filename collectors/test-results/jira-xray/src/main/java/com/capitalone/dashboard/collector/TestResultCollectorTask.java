@@ -4,10 +4,7 @@ import com.atlassian.jira.rest.client.internal.async.DisposableHttpClient;
 import com.capitalone.dashboard.TestResultSettings;
 import com.capitalone.dashboard.core.client.JiraXRayRestClientSupplier;
 import com.capitalone.dashboard.model.TestResultCollector;
-import com.capitalone.dashboard.repository.BaseCollectorRepository;
-import com.capitalone.dashboard.repository.FeatureRepository;
-import com.capitalone.dashboard.repository.TestResultCollectorRepository;
-import com.capitalone.dashboard.repository.TestResultRepository;
+import com.capitalone.dashboard.repository.*;
 import com.capitalone.dashboard.core.client.testexecution.TestExecutionClientImpl;
 import com.capitalone.dashboard.util.CoreFeatureSettings;
 import com.capitalone.dashboard.util.FeatureCollectorConstants;
@@ -26,6 +23,7 @@ public class TestResultCollectorTask extends CollectorTask<TestResultCollector> 
 
     private final TestResultRepository testResultRepository;
     private final FeatureRepository featureRepository;
+    private final CollectorItemRepository collectorItemRepository;
     private final TestResultCollectorRepository testResultCollectorRepository;
     private final TestResultSettings testResultSettings;
     private final JiraXRayRestClientSupplier restClientSupplier;
@@ -47,13 +45,14 @@ public class TestResultCollectorTask extends CollectorTask<TestResultCollector> 
     @Autowired
     public TestResultCollectorTask(CoreFeatureSettings coreFeatureSettings, TaskScheduler taskScheduler, TestResultRepository testResultRepository,
                                    TestResultCollectorRepository testResultCollectorRepository, TestResultSettings testResultSettings,
-                                   FeatureRepository featureRepository, JiraXRayRestClientSupplier restClientSupplier) {
+                                   FeatureRepository featureRepository, CollectorItemRepository collectorItemRepository, JiraXRayRestClientSupplier restClientSupplier) {
         super(taskScheduler, FeatureCollectorConstants.JIRA_XRAY);
         this.testResultRepository = testResultRepository;
         this.testResultCollectorRepository = testResultCollectorRepository;
         this.coreFeatureSettings = coreFeatureSettings;
         this.testResultSettings = testResultSettings;
         this.featureRepository = featureRepository;
+        this.collectorItemRepository = collectorItemRepository;
         this.restClientSupplier = restClientSupplier;
         this.httpClient = httpClient;
     }
@@ -95,7 +94,7 @@ public class TestResultCollectorTask extends CollectorTask<TestResultCollector> 
         try {
             long testExecutionDataStart = System.currentTimeMillis();
             TestExecutionClientImpl testExecutionData = new TestExecutionClientImpl(this.testResultRepository, this.testResultCollectorRepository,
-                    this.featureRepository, this.testResultSettings, this.restClientSupplier);
+                    this.featureRepository, this.collectorItemRepository, this.testResultSettings, this.restClientSupplier);
             count = testExecutionData.updateTestResultInformation();
 
             log("Test Execution Data", testExecutionDataStart, count);

@@ -59,6 +59,6 @@ public class Example extends BasicIssue {
         this.status = status;
     }
 
-    public enum Status{TODO,FAIL,PASS};
+    public enum Status{TODO,FAIL,PASS}
 
-};
+}
