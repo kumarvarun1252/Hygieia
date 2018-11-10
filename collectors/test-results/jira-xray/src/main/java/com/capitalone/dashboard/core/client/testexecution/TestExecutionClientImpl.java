@@ -93,16 +93,14 @@ public class TestExecutionClientImpl implements TestExecutionClient {
         if (currentPagedTestExecutions != null) {
             List<TestResult> testResultsToSave = new ArrayList<>();
             ObjectId collectorItemId;
-//            ObjectId jiraXRayFeatureId = testResultCollectorRepository.findByName(FeatureCollectorConstants.JIRA_XRAY).getId();
 
             for (Feature testExec : currentPagedTestExecutions) {
 
-                // Set collectoritemid
+                // Set collectoritemid for manual test results
                 if (testExec.getsTeamID() != null) {
                     collectorItemId = this.collectorItemRepository.findByJiraProjectIdAndTeamId(testExec.getsProjectID(), testExec.getsTeamID()).getId();
                 } else {
                     collectorItemId = this.collectorItemRepository.findByJiraProjectId(testExec.getsProjectID()).getId();
-
                 }
 
                 TestResult testResult = new TestResult();
