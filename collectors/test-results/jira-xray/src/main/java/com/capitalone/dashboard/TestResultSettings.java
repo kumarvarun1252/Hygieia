@@ -27,6 +27,7 @@ public class TestResultSettings {
 	private String deltaStartDate;
 	private String deltaCollectorItemStartDate;
 	private String masterStartDate;
+	private int scheduledPriorMin;
 	private String queryFolder;
 	private String storyQuery;
 
@@ -94,6 +95,14 @@ public class TestResultSettings {
 
 	public void setMasterStartDate(String masterStartDate) {
 		this.masterStartDate = masterStartDate;
+	}
+
+	public int getScheduledPriorMin() {
+		return this.scheduledPriorMin;
+	}
+
+	public void setScheduledPriorMin(int scheduledPriorMin) {
+		this.scheduledPriorMin = scheduledPriorMin;
 	}
 
 	public String getQueryFolder() {

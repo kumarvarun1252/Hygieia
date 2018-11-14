@@ -22,7 +22,7 @@ import java.util.ArrayList;
 /**
  * This is the implementation class for TestExecutionRestClient
  */
-public abstract class TestExecutionRestClientImpl extends AbstractAsynchronousRestClient implements TestExecutionRestClient {
+public class TestExecutionRestClientImpl extends AbstractAsynchronousRestClient implements TestExecutionRestClient {
     private URI baseUri;
     private final TestArrayJsonParser testsParser=new TestArrayJsonParser();
     private SearchRestClient searchRestClient=null;
@@ -41,6 +41,11 @@ public abstract class TestExecutionRestClientImpl extends AbstractAsynchronousRe
         UriBuilder uriBuilder=UriBuilder.fromUri(baseUri);
         uriBuilder.path("testexec").path("{isssue-key}").path("test");
         return this.getAndParse(uriBuilder.build(testExecution.getKey()),this.testsParser);
+    }
+
+    @Override
+    public Promise<Void> setTests(TestExecution testExec) {
+        return null;
     }
 
 

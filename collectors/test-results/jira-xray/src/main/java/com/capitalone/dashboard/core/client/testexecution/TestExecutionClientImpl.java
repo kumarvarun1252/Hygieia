@@ -6,7 +6,15 @@ import com.capitalone.dashboard.api.domain.TestRun;
 import com.capitalone.dashboard.api.domain.TestStep;
 import com.capitalone.dashboard.core.client.JiraXRayRestClientImpl;
 import com.capitalone.dashboard.core.client.JiraXRayRestClientSupplier;
-import com.capitalone.dashboard.model.*;
+import com.capitalone.dashboard.model.CollectorItem;
+import com.capitalone.dashboard.model.Feature;
+import com.capitalone.dashboard.model.TestResult;
+import com.capitalone.dashboard.model.TestCase;
+import com.capitalone.dashboard.model.TestCaseStatus;
+import com.capitalone.dashboard.model.TestCaseStep;
+import com.capitalone.dashboard.model.TestCapability;
+import com.capitalone.dashboard.model.TestSuite;
+import com.capitalone.dashboard.model.TestSuiteType;
 import com.capitalone.dashboard.repository.CollectorItemRepository;
 import com.capitalone.dashboard.repository.FeatureRepository;
 import com.capitalone.dashboard.repository.TestResultCollectorRepository;
@@ -17,10 +25,12 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
+import java.util.HashMap;
+import java.util.Collections;
+
 
 public class TestExecutionClientImpl implements TestExecutionClient {
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(TestExecutionClientImpl.class);
@@ -54,7 +64,8 @@ public class TestExecutionClientImpl implements TestExecutionClient {
                 LOGGER.debug("Obtaining story information starting at index " + i + "...");
             }
             long queryStart = System.currentTimeMillis();
-            List<Feature> testExecutions = featureRepository.getStoryByType("Test Execution");
+            List<Feature> testExecutions = this.getTestExecutions(featureRepository.getStoryByType("Test Execution"), i, pageSize);
+
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Story information query took " + (System.currentTimeMillis() - queryStart) + " ms");
             }
@@ -84,7 +95,6 @@ public class TestExecutionClientImpl implements TestExecutionClient {
      * @param currentPagedTestExecutions
      *            A list response of Jira issues from the source system
      */
-    @SuppressWarnings({ "PMD.AvoidDeeplyNestedIfStmts", "PMD.NPathComplexity" })
     private void updateMongoInfo(List<Feature> currentPagedTestExecutions) {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Size of paged Jira response: " + (currentPagedTestExecutions == null? 0 : currentPagedTestExecutions.size()));
@@ -97,15 +107,18 @@ public class TestExecutionClientImpl implements TestExecutionClient {
             for (Feature testExec : currentPagedTestExecutions) {
 
                 // Set collectoritemid for manual test results
-                if (testExec.getsTeamID() != null) {
-                    collectorItemId = this.collectorItemRepository.findByJiraProjectIdAndTeamId(testExec.getsProjectID(), testExec.getsTeamID()).getId();
-                } else {
-                    collectorItemId = this.collectorItemRepository.findByJiraProjectId(testExec.getsProjectID()).getId();
-                }
+//                if (testExec.getsTeamID() != null) {
+//                    collectorItemId = this.collectorItemRepository.findByJiraTeamId(testExec.getsTeamID()).getId();
+//                } else if (testExec.getsProjectID() != null) {
+//                    collectorItemId = this.collectorItemRepository.findByJiraProjectId(testExec.getsProjectID()).getId();
+//                } else {
+//                    CollectorItem collectorItem = new CollectorItem();
+//                    collectorItemId = collectorItem.getId();
+//                }
 
                 TestResult testResult = new TestResult();
 
-                testResult.setCollectorItemId(collectorItemId);
+//                testResult.setCollectorItemId(collectorItemId);
                 testResult.setDescription(testExec.getsName());
 
                 testResult.setTargetAppName(testExec.getsProjectName());
@@ -117,54 +130,58 @@ public class TestExecutionClientImpl implements TestExecutionClient {
                     restClient= (JiraXRayRestClientImpl) restClientSupplier.get();
                     Iterable<TestExecution.Test> tests = restClient.getTestExecutionClient().getTests(testExecution).claim();
 
-                    int totalCount = (int) tests.spliterator().getExactSizeIfKnown();
+                    if (tests != null) {
+                        int totalCount = (int) tests.spliterator().getExactSizeIfKnown();
 
-                    Map<String,Integer> testCountByStatus = this.getTestCountStatusMap(testExec, tests);
-                    int failCount = testCountByStatus.get("FAIL_COUNT");
-                    int passCount = testCountByStatus.get("PASS_COUNT");
+                        Map<String,Integer> testCountByStatus = this.getTestCountStatusMap(testExec, tests);
+                        int failCount = testCountByStatus.get("FAIL_COUNT");
+                        int passCount = testCountByStatus.get("PASS_COUNT");
 
-                    List<TestCapability> capabilities = new ArrayList<>();
-                    TestCapability capability = new TestCapability();
-                    capability.setDescription(testExec.getsName());
-                    capability.setTotalTestSuiteCount(1);
-                    capability.setType(TestSuiteType.Manual);
-                    List<TestSuite> testSuites = new ArrayList<>();
-                    TestSuite testSuite = new TestSuite();
+                        List<TestCapability> capabilities = new ArrayList<>();
+                        TestCapability capability = new TestCapability();
+                        capability.setDescription(testExec.getsName());
+                        capability.setTotalTestSuiteCount(1);
+                        capability.setType(TestSuiteType.Manual);
+                        List<TestSuite> testSuites = new ArrayList<>();
+                        TestSuite testSuite = new TestSuite();
 
-                    testSuite.setDescription(testExec.getsName());
-                    testSuite.setType(TestSuiteType.Manual);
+                        testSuite.setDescription(testExec.getsName());
+                        testSuite.setType(TestSuiteType.Manual);
 
-                    testSuite.setTotalTestCaseCount(totalCount);
-                    testSuite.setFailedTestCaseCount(failCount);
-                    testSuite.setSuccessTestCaseCount(passCount);
+                        testSuite.setTotalTestCaseCount(totalCount);
+                        testSuite.setFailedTestCaseCount(failCount);
+                        testSuite.setSuccessTestCaseCount(passCount);
 
-                    int skipCount = totalCount - (failCount + passCount);
-                    testSuite.setSkippedTestCaseCount(skipCount);
+                        int skipCount = totalCount - (failCount + passCount);
+                        testSuite.setSkippedTestCaseCount(skipCount);
 
-                    if(failCount > 0) {
-                        capability.setStatus(TestCaseStatus.Failure);
-                        testResult.setResultStatus("Failure");
-                        testSuite.setStatus(TestCaseStatus.Failure);
-                        testResult.setFailureCount(1);
-                        capability.setFailedTestSuiteCount(1);
-                    } else if (totalCount == passCount){
-                        capability.setStatus(TestCaseStatus.Success);
-                        testResult.setResultStatus("Success");
-                        testSuite.setStatus(TestCaseStatus.Success);
-                        testResult.setSuccessCount(1);
-                        capability.setSuccessTestSuiteCount(1);
-                    } else {
-                        capability.setStatus(TestCaseStatus.Skipped);
-                        testResult.setResultStatus("Skipped");
-                        testSuite.setStatus(TestCaseStatus.Skipped);
-                        testResult.setSkippedCount(1);
-                        capability.setSkippedTestSuiteCount(1);
+                        if(failCount > 0) {
+                            capability.setStatus(TestCaseStatus.Failure);
+                            testResult.setResultStatus("Failure");
+                            testSuite.setStatus(TestCaseStatus.Failure);
+                            testResult.setFailureCount(1);
+                            capability.setFailedTestSuiteCount(1);
+                        } else if (totalCount == passCount){
+                            capability.setStatus(TestCaseStatus.Success);
+                            testResult.setResultStatus("Success");
+                            testSuite.setStatus(TestCaseStatus.Success);
+                            testResult.setSuccessCount(1);
+                            capability.setSuccessTestSuiteCount(1);
+                        } else {
+                            capability.setStatus(TestCaseStatus.Skipped);
+                            testResult.setResultStatus("Skipped");
+                            testSuite.setStatus(TestCaseStatus.Skipped);
+                            testResult.setSkippedCount(1);
+                            capability.setSkippedTestSuiteCount(1);
+                        }
+
+                        testSuite.setTestCases(this.getTestCases(tests, testExec));
+                        testSuites.add(testSuite);
+                        capability.setTestSuites(testSuites);
+                        capabilities.add(capability);
+                        testResult.setTestCapabilities(capabilities);
                     }
-                    testSuite.setTestCases(this.getTestCases(tests,testExec));
-                    testSuites.add(testSuite);
-                    capability.setTestSuites(testSuites);
-                    capabilities.add(capability);
-                    testResult.setTestCapabilities(capabilities);
+
                 } catch (URISyntaxException u) {
                     LOGGER.error("URI Syntax Invalid");
                 }
@@ -187,32 +204,34 @@ public class TestExecutionClientImpl implements TestExecutionClient {
 
                 testCase.setId(testRun.getId().toString());
                 testCase.setDescription(test.toString());
-                int totalSteps = (int) testRun.getSteps().spliterator().getExactSizeIfKnown();
-                Map<String,Integer> stepCountByStatus = this.getStepCountStatusMap(testRun);
+                if (testRun.getSteps() != null) {
+                    int totalSteps = (int) testRun.getSteps().spliterator().getExactSizeIfKnown();
+                    Map<String,Integer> stepCountByStatus = this.getStepCountStatusMap(testRun);
 
-                int failSteps = stepCountByStatus.get("FAILSTEP_COUNT");
-                int passSteps = stepCountByStatus.get("PASSSTEP_COUNT");
-                int skipSteps = stepCountByStatus.get("SKIPSTEP_COUNT");
-                int unknownSteps = stepCountByStatus.get("UNKNOWNSTEP_COUNT");
-                testCase.setTotalTestStepCount(totalSteps);
-                testCase.setFailedTestStepCount(failSteps);
-                testCase.setSuccessTestStepCount(passSteps);
-                testCase.setSkippedTestStepCount(skipSteps);
-                testCase.setUnknownStatusCount(unknownSteps);
-                if(failSteps > 0) {
-                    testCase.setStatus(TestCaseStatus.Failure);
-                } else if (skipSteps > 0){
-                    testCase.setStatus(TestCaseStatus.Skipped);
-                } else if(passSteps > 0){
-                    testCase.setStatus(TestCaseStatus.Success);
-                } else {
-                    testCase.setStatus(TestCaseStatus.Unknown);
+                    int failSteps = stepCountByStatus.get("FAILSTEP_COUNT");
+                    int passSteps = stepCountByStatus.get("PASSSTEP_COUNT");
+                    int skipSteps = stepCountByStatus.get("SKIPSTEP_COUNT");
+                    int unknownSteps = stepCountByStatus.get("UNKNOWNSTEP_COUNT");
+                    testCase.setTotalTestStepCount(totalSteps);
+                    testCase.setFailedTestStepCount(failSteps);
+                    testCase.setSuccessTestStepCount(passSteps);
+                    testCase.setSkippedTestStepCount(skipSteps);
+                    testCase.setUnknownStatusCount(unknownSteps);
+                    if(failSteps > 0) {
+                        testCase.setStatus(TestCaseStatus.Failure);
+                    } else if (skipSteps > 0){
+                        testCase.setStatus(TestCaseStatus.Skipped);
+                    } else if(passSteps > 0){
+                        testCase.setStatus(TestCaseStatus.Success);
+                    } else {
+                        testCase.setStatus(TestCaseStatus.Unknown);
+                    }
+
+                    testCase.setTestSteps(this.getTestSteps(testRun));
                 }
 
-                testCase.setTestSteps(this.getTestSteps(testRun));
-
             } catch (Exception e) {
-                LOGGER.error("Unable to get the Test Run: " + e);
+                LOGGER.error("Unable to get the Test Step: " + e);
             }
             testCases.add(testCase);
         }
@@ -297,6 +316,19 @@ public class TestExecutionClientImpl implements TestExecutionClient {
         map.put("UNKNOWNSTEP_COUNT", unknownStepCount);
 
         return map;
+    }
+
+    public List<Feature> getTestExecutions(List<Feature> sourceList, int page, int pageSize) {
+        if(pageSize <= 0 || page < 0) {
+            throw new IllegalArgumentException("invalid page size: " + pageSize);
+        }
+
+        int fromIndex = page * pageSize;
+        if(sourceList == null || sourceList.size() < fromIndex){
+            return Collections.emptyList();
+        }
+
+        return sourceList.subList(fromIndex, Math.min(fromIndex + pageSize, sourceList.size()));
     }
 
     /**

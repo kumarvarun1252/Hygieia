@@ -37,19 +37,14 @@ public class TestRun extends BasicIssue implements Versionable<TestRun> {
         super(self,key,id);
     }
 
-    @SuppressWarnings("PMD.ExcessiveParameterList")
-    public TestRun(URI self, String key, Long id,Status status,Date startedOn,Date finishedOn,String assignee,String executedBy,Iterable<Defect> defects,Iterable<Evidence> evidences,Comment comment,Iterable<Example>examples,Iterable<TestStep>steps) {
+    public TestRun(URI self, String key, Long id, Status status, Date startedOn, Date finishedOn, String assignee, String executedBy, Iterable<TestStep>steps) {
         super(self, key, id);
         this.status=status;
         this.assignee=assignee;
         this.executedBy=executedBy;
         this.startedOn=startedOn;
         this.finishedOn=finishedOn;
-        this.defects=defects;
-        this.evidences=evidences;
-        this.comment=comment;
         this.steps=steps;
-        this.examples=examples;
         try {
             this.oldVersion= cloneTestRun();
         } catch (CloneNotSupportedException e) {

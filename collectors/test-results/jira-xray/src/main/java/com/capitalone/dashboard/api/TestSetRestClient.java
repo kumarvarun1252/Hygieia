@@ -1,7 +1,7 @@
 package com.capitalone.dashboard.api;
 
 /**
- * Created by lucho on 11/08/16.
+ * This interface is a client for test set
  */
 public interface TestSetRestClient {
 }

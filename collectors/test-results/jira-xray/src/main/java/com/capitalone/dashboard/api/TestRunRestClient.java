@@ -4,7 +4,7 @@ import com.atlassian.util.concurrent.Promise;
 import com.capitalone.dashboard.api.domain.*;
 
 /**
- * Created by lucho on 11/08/16.
+ * This interface is a client for test run
  */
 public interface TestRunRestClient {
 

@@ -20,7 +20,7 @@ public class TestStep extends BasicIssue implements Versionable<TestStep> {
     private RendereableItem result;
     private Iterable<Evidence> attachments;
     private Iterable<Evidence> evidences;
-    private Iterable<Defect> defects;
+    Iterable<Defect> defects;
     private Comment comment;
     private Status status;
 
@@ -29,18 +29,13 @@ public class TestStep extends BasicIssue implements Versionable<TestStep> {
         super(self, key, id);
     }
 
-    @SuppressWarnings("PMD.ExcessiveParameterList")
-    public TestStep(URI self, String key, Long id, Integer index, RendereableItem step, RendereableItem data, RendereableItem result, Iterable<Evidence> attachments, Status status, Comment comment, Iterable<Defect> defects, Iterable<Evidence> evidences) {
+    public TestStep(URI self, String key, Long id, Integer index, RendereableItem step, RendereableItem data, RendereableItem result, Status status) {
         super(self, key, id);
         this.index = index;
         this.step = step;
         this.data = data;
         this.result = result;
-        this.attachments = attachments;
         this.status = status;
-        this.comment = comment;
-        this.defects = defects;
-        this.evidences = evidences;
     }
 
 

@@ -3,7 +3,7 @@ package com.capitalone.dashboard.api;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
 
 /**
- * Created by lucho on 11/08/16.
+ * This interface have clients for jira xray test objects
  */
 public interface JiraXRayRestClient extends JiraRestClient {
 
