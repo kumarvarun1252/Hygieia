@@ -273,14 +273,16 @@ public class TestExecutionClientImpl implements TestExecutionClient {
         for (TestExecution.Test test : tests) {
             try {
                 TestRun testRun = restClient.getTestRunClient().getTestRun(testExec.getsNumber(), test.getKey()).claim();
-                if (testRun.getStatus().toString().equals("FAIL")) {
-                    failCount++;
-                }else if (testRun.getStatus().toString().equals("PASS")) {
-                    passCount++;
-                }else if (testRun.getStatus().toString().equals("SKIP")){
-                    skipCount++;
-                }else{
-                    unknownCount++;
+                if (testRun != null) {
+                    if (testRun.getStatus().toString().equals("FAIL")) {
+                        failCount++;
+                    }else if (testRun.getStatus().toString().equals("PASS")) {
+                        passCount++;
+                    }else if (testRun.getStatus().toString().equals("SKIP")){
+                        skipCount++;
+                    }else{
+                        unknownCount++;
+                    }
                 }
             } catch (Exception e) {
                 LOGGER.error("Unable to get the Test Run: " + e);
