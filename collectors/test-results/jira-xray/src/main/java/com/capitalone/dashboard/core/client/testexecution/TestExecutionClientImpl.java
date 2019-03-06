@@ -83,6 +83,7 @@ public class TestExecutionClientImpl implements TestExecutionClient {
 
         boolean hasMore = true;
         List<Feature> testExecutions = featureRepository.getStoryByType("Test Execution");
+        List<Feature> tests = featureRepository.getStoryByType("Test");
         List<Feature> manualTestExecutions = this.getManualTestExecutions(testExecutions);
 
         for (int i = 0; hasMore; i += 1) {
@@ -322,9 +323,14 @@ public class TestExecutionClientImpl implements TestExecutionClient {
                 testCase.setStatus(TestCaseStatus.Unknown);
             }
 
-             Set<String> tags = getStoryIds(feature.getIssueLinks());
-            // Temporarily commented for core project update
-            // testCase.setTags(tags);
+            List<Feature> tc = featureRepository.getStoryByNumber(test.getKey());
+            if (tc.size() > 0) {
+                for (Feature t : tc) {
+                    Set<String> tags = getStoryIds(t.getIssueLinks());
+                    testCase.setTags(tags);
+                }
+            }
+
             testCase.setTestSteps(this.getTestSteps(testRun));
         }
         return testCase;

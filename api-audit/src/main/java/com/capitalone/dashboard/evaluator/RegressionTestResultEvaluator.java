@@ -91,6 +91,7 @@ public class RegressionTestResultEvaluator extends Evaluator<TestResultsAuditRes
         final List<StoryIndicator> totalStoryIndicatorList = new ArrayList<>();
 
         for (TestResult testResult : testResults) {
+
             if (TestSuiteType.Regression.toString().equalsIgnoreCase(testResult.getType().name()) ||
                     TestSuiteType.Functional.toString().equalsIgnoreCase(testResult.getType().name()) ||
                     TestSuiteType.Manual.toString().equalsIgnoreCase(testResult.getType().name())) {
@@ -179,10 +180,16 @@ public class RegressionTestResultEvaluator extends Evaluator<TestResultsAuditRes
             Pattern p = Pattern.compile(REGEX_ANY_STRING_MATCHING_FEATURE_ID);
             tags.forEach(tag -> {
                 Matcher tagMatch = p.matcher(tag);
+                List<Feature> featureDetails = new ArrayList<>();
                 if (tagMatch.find()) {
-                    List<Feature> featureDetails = featureRepository.getStoryByNumber(tag.substring(1, tag.length()));
+                    if (tag.contains("@")) {
+                        tag = tag.substring(1, tag.length());
+                        featureDetails = featureRepository.getStoryByNumber(tag.substring(1, tag.length()));
+                    } else {
+                        featureDetails = featureRepository.getStoryByNumber(tag);
+                    }
 
-                    if (this.getTotalCompletedStoriesInGivenDateRange(dashboard.getTitle(), beginDate, endDate).contains(tag.substring(1, tag.length()))) {
+                    if (this.getTotalCompletedStoriesInGivenDateRange(dashboard.getTitle(), beginDate, endDate).contains(tag)) {
                         featureDetails.stream()
                                 .forEach(feature -> {
                                     if (this.getEpochChangeDate(feature) >= beginDate && this.getEpochChangeDate(feature) <= endDate) {
